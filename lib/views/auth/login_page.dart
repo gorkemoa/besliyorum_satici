@@ -5,12 +5,11 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Basic color estimation
-    const Color primaryRed = Color(0xFFC62828); // Deep Red
-    const Color titleColor = Color(0xFFE64A19); // Deep Orange
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -18,9 +17,9 @@ class LoginPage extends StatelessWidget {
             Container(
               width: double.infinity,
               height: MediaQuery.of(context).size.height * 0.38,
-              decoration: const BoxDecoration(
-                color: primaryRed,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: theme.primaryColor,
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
                 ),
@@ -45,21 +44,18 @@ class LoginPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Satıcı Girişi',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: titleColor,
+                    style: textTheme.displayMedium?.copyWith(
+                      color: theme.primaryColor,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Lütfen size iletilen kullanıcı adı ve şifre\nile giriş yapınız.',
+                  Text(
+                    'Lütfen size iletilen kullanıcı adı ve şifre ile\ngiriş yapınız.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
+                    style: textTheme.bodyMedium?.copyWith(
                       color: Colors.grey,
                       height: 1.5,
                     ),
@@ -67,46 +63,16 @@ class LoginPage extends StatelessWidget {
                   const SizedBox(height: 30),
 
                   // Username Input
-                  TextField(
+                  const TextField(
                     // Using standard TextField for now, can be customized further
-                    decoration: InputDecoration(
-                      hintText: 'Kullanıcı Adınız',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                    ),
+                    decoration: InputDecoration(hintText: 'Kullanıcı Adınız'),
                   ),
                   const SizedBox(height: 16),
 
                   // Password Input
-                  TextField(
+                  const TextField(
                     obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: 'Şifreniz',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                    ),
+                    decoration: InputDecoration(hintText: 'Şifreniz'),
                   ),
                   const SizedBox(height: 30),
 
@@ -115,24 +81,9 @@ class LoginPage extends StatelessWidget {
                     onPressed: () {
                       // TODO: Implement login logic
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryRed,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          5,
-                        ), // Slightly rounded/rectangular as per image
-                      ),
-                      elevation: 0,
-                    ),
                     child: const Text(
                       'GİRİŞ YAP',
-                      style: TextStyle(
-                        fontSize: 16,
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(letterSpacing: 1.5),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -141,12 +92,12 @@ class LoginPage extends StatelessWidget {
                   Center(
                     child: GestureDetector(
                       onTap: () {},
-                      child: const Text(
+                      child: Text(
                         'Şifrenizi mi unuttunuz?',
-                        style: TextStyle(
-                          color: Color(0xFFFF8A65), // Lighter orange
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFFFF8A65), // Lighter orange
                           decoration: TextDecoration.underline,
-                          decorationColor: Color(0xFFFF8A65),
+                          decorationColor: const Color(0xFFFF8A65),
                         ),
                       ),
                     ),
@@ -157,18 +108,20 @@ class LoginPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         'Satıcı değil misiniz? ',
-                        style: TextStyle(color: Colors.grey),
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey,
+                        ),
                       ),
                       GestureDetector(
                         onTap: () {},
-                        child: const Text(
+                        child: Text(
                           'Kaydol',
-                          style: TextStyle(
-                            color: Color(0xFFFF8A65), // Lighter orange
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: const Color(0xFFFF8A65), // Lighter orange
                             decoration: TextDecoration.underline,
-                            decorationColor: Color(0xFFFF8A65),
+                            decorationColor: const Color(0xFFFF8A65),
                           ),
                         ),
                       ),

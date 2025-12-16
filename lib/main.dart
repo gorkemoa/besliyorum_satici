@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:besliyorum_satici/views/auth/login_page.dart';
+import 'package:besliyorum_satici/views/splash/splash_page.dart';
+import 'package:besliyorum_satici/core/theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,11 +15,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Besliyorum Satıcı',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFC62828)),
-        useMaterial3: true,
-      ),
-      home: const LoginPage(),
+      theme: AppTheme.lightTheme,
+      home: const SplashPage(),
     );
   }
 }
