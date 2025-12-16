@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:besliyorum_satici/models/order/order_model.dart';
+import 'package:besliyorum_satici/models/order/order_detail_model.dart';
 import '../services/order_service.dart';
 
 class OrderViewModel extends ChangeNotifier {
@@ -16,6 +17,16 @@ class OrderViewModel extends ChangeNotifier {
 
   String _emptyMessage = '';
   String get emptyMessage => _emptyMessage;
+
+  // Order Detail State
+  bool _isDetailLoading = false;
+  bool get isDetailLoading => _isDetailLoading;
+
+  String? _detailErrorMessage;
+  String? get detailErrorMessage => _detailErrorMessage;
+
+  OrderDetailData? _orderDetail;
+  OrderDetailData? get orderDetail => _orderDetail;
 
   // Filtre değerleri
   String? _startDate;
@@ -92,6 +103,39 @@ class OrderViewModel extends ChangeNotifier {
     }
   }
 
+  /// Sipariş detayını yükler
+  Future<void> getOrderDetail(String userToken, int orderID) async {
+    _isDetailLoading = true;
+    _detailErrorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _orderService.getOrderDetail(userToken, orderID);
+
+      if (response.success && response.data != null) {
+        _orderDetail = response.data;
+      } else {
+        _detailErrorMessage = 'Sipariş detayı yüklenemedi';
+      }
+    } catch (e) {
+      if (e.toString().contains('403')) {
+        _detailErrorMessage = '403_LOGOUT';
+      } else {
+        _detailErrorMessage = e.toString();
+      }
+    } finally {
+      _isDetailLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Sipariş detay state'ini temizler
+  void clearOrderDetail() {
+    _orderDetail = null;
+    _detailErrorMessage = null;
+    _isDetailLoading = false;
+  }
+
   /// State'i temizler ve UI'ı bilgilendirir
   void clearState() {
     _errorMessage = null;
@@ -102,6 +146,9 @@ class OrderViewModel extends ChangeNotifier {
     _endDate = null;
     _orderCode = null;
     _orderStatus = null;
+    _orderDetail = null;
+    _detailErrorMessage = null;
+    _isDetailLoading = false;
     notifyListeners();
   }
 
@@ -115,5 +162,15 @@ class OrderViewModel extends ChangeNotifier {
     _endDate = null;
     _orderCode = null;
     _orderStatus = null;
+    _orderDetail = null;
+    _detailErrorMessage = null;
+    _isDetailLoading = false;
+  }
+
+  /// Sipariş detay state'ini sessizce temizler (initState için)
+  void resetDetailState() {
+    _orderDetail = null;
+    _detailErrorMessage = null;
+    _isDetailLoading = false;
   }
 }

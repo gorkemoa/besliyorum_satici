@@ -8,4 +8,8 @@ class AppConstants {
 
 class Endpoints {
   static const String login = 'service/auth/login';
+
+  // Order Endpoints
+  static const String orderList = 'service/user/account/order/list';
+  static const String orderDetail = 'service/user/account/order/detail';
 }

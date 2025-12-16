@@ -6,6 +6,7 @@ import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/order_viewmodel.dart';
 import '../../models/order/order_model.dart';
 import '../auth/login_page.dart';
+import 'order_detail_page.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -699,7 +700,11 @@ class _OrdersPageState extends State<OrdersPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            // Sipariş detay sayfasına git
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => OrderDetailPage(orderID: order.orderID),
+              ),
+            );
           },
           child: Padding(
             padding: const EdgeInsets.all(16),

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:logger/logger.dart';
 
 import 'package:besliyorum_satici/models/order/order_model.dart';
+import 'package:besliyorum_satici/models/order/order_detail_model.dart';
+import '../core/constants/app_constants.dart';
 import 'api_service.dart';
 
 class OrderService {
@@ -22,7 +24,7 @@ class OrderService {
     int? orderStatus,
   }) async {
     try {
-      String endpoint = 'service/user/account/order/list?userToken=$userToken';
+      String endpoint = '${Endpoints.orderList}?userToken=$userToken';
 
       if (startDate != null && startDate.isNotEmpty) {
         endpoint += '&filters[startDate]=$startDate';
@@ -43,6 +45,27 @@ class OrderService {
       return OrderListResponseModel.fromJson(responseData);
     } catch (e) {
       _logger.e('Error fetching user orders', error: e);
+      rethrow;
+    }
+  }
+
+  /// Sipariş detayını getirir
+  /// [userToken] - Kullanıcı token'ı
+  /// [orderID] - Sipariş ID'si
+  Future<OrderDetailResponseModel> getOrderDetail(
+    String userToken,
+    int orderID,
+  ) async {
+    try {
+      String endpoint =
+          '${Endpoints.orderDetail}?userToken=$userToken&orderID=$orderID';
+
+      final response = await _apiService.get(endpoint);
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return OrderDetailResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error fetching order detail', error: e);
       rethrow;
     }
   }
