@@ -1,0 +1,36 @@
+import 'dart:convert';
+import '../core/constants/app_constants.dart';
+import '../core/services/local_storage_service.dart';
+import 'package:besliyorum_satici/models/auth/login_model.dart';
+import 'api_service.dart';
+
+class AuthService {
+  final ApiService _apiService = ApiService();
+
+  final LocalStorageService _localStorageService = LocalStorageService();
+
+  Future<LoginResponseModel> login(LoginRequestModel request) async {
+    try {
+      final response = await _apiService.post(
+        Endpoints.login,
+        body: request.toJson(),
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      final loginResponse = LoginResponseModel.fromJson(responseData);
+
+      if (loginResponse.success && loginResponse.data != null) {
+        await _localStorageService.saveToken(loginResponse.data!.token);
+        await _localStorageService.saveUserId(loginResponse.data!.userID);
+      }
+
+      return loginResponse;
+    } catch (e) {
+      throw Exception('Login failed: $e');
+    }
+  }
+
+  Future<void> logout() async {
+    await _localStorageService.clearAll();
+  }
+}

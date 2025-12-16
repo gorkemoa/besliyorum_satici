@@ -10,6 +10,9 @@ class AppTheme {
   static const Color secondaryColor = Colors.white;
   static const Color scaffoldBackgroundColor = Colors.white;
   static const Color errorColor = Color(0xFFD32F2F);
+  static const Color successColor = Color(
+    0xFF2E7D32,
+  ); // Green for success/confirm actions
 
   // Text Colors
   static const Color textPrimary = Colors.black;

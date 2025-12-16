@@ -1,7 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:besliyorum_satici/core/components/app_dialog.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+import '../home/home_page.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,35 +82,88 @@ class LoginPage extends StatelessWidget {
                   const SizedBox(height: 30),
 
                   // Username Input
-                  const TextField(
-                    // Using standard TextField for now, can be customized further
-                    decoration: InputDecoration(hintText: 'Kullanıcı Adınız'),
+                  TextField(
+                    controller: _usernameController,
+                    decoration: const InputDecoration(
+                      hintText: 'Kullanıcı Adınız',
+                    ),
                   ),
                   const SizedBox(height: 16),
 
                   // Password Input
-                  const TextField(
+                  TextField(
+                    controller: _passwordController,
                     obscureText: true,
-                    decoration: InputDecoration(hintText: 'Şifreniz'),
+                    decoration: const InputDecoration(hintText: 'Şifreniz'),
                   ),
                   const SizedBox(height: 30),
 
                   // Login Button
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement login logic
+                  // Login Button
+                  Consumer<AuthViewModel>(
+                    builder: (context, viewModel, child) {
+                      return ElevatedButton(
+                        onPressed: viewModel.isLoading
+                            ? null
+                            : () async {
+                                final username = _usernameController.text;
+                                final password = _passwordController.text;
+
+                                await viewModel.login(username, password);
+
+                                if (viewModel.errorMessage != null) {
+                                  if (context.mounted) {
+                                    AppDialog.show(
+                                      context: context,
+                                      title: 'Hata',
+                                      content: viewModel.errorMessage!,
+                                      type: AppDialogType.alert,
+                                      confirmText: 'Tamam',
+                                    );
+                                  }
+                                } else if (viewModel.loginResponse?.success ==
+                                    true) {
+                                  // Navigate to next screen or show success
+                                  if (context.mounted) {
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (context) => const HomePage(),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                        child: viewModel.isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'GİRİŞ YAP',
+                                style: TextStyle(letterSpacing: 1.5),
+                              ),
+                      );
                     },
-                    child: const Text(
-                      'GİRİŞ YAP',
-                      style: TextStyle(letterSpacing: 1.5),
-                    ),
                   ),
                   const SizedBox(height: 30),
 
                   // Forgot Password
                   Center(
                     child: GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        AppDialog.show(
+                          context: context,
+                          title: 'Şifre Yenileme',
+                          content:
+                              'Şifre yenileme bağlantısı e-posta adresinize gönderilecektir.',
+                          type: AppDialogType.info,
+                          confirmText: 'Tamam',
+                        );
+                      },
                       child: Text(
                         'Şifrenizi mi unuttunuz?',
                         style: textTheme.bodyMedium?.copyWith(
@@ -115,7 +187,21 @@ class LoginPage extends StatelessWidget {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          AppDialog.show(
+                            context: context,
+                            title: 'Kayıt Ol',
+                            content:
+                                'Satıcı kayıt sayfasına yönlendiriliyorsunuz.',
+                            type: AppDialogType.confirmation,
+                            confirmText: 'Devam Et',
+                            cancelText: 'İptal',
+                            onConfirm: () {
+                              Navigator.of(context).pop(); // Close dialog
+                              // Navigate to register...
+                            },
+                          );
+                        },
                         child: Text(
                           'Kaydol',
                           style: textTheme.bodyMedium?.copyWith(

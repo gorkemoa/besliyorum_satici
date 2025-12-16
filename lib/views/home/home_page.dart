@@ -1,0 +1,372 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/theme/app_theme.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/home_viewmodel.dart';
+import 'package:besliyorum_satici/models/home/home_model.dart';
+import '../auth/login_page.dart';
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // State'i hemen temizle ki build sırasında eski hata görünüp redirect olmasın
+    Provider.of<HomeViewModel>(context, listen: false).clearState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  void _loadData() {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
+
+    final userId = authViewModel.loginResponse?.data?.userID;
+    final token = authViewModel.loginResponse?.data?.token;
+
+    if (userId != null && token != null) {
+      homeViewModel.getUserAccount(userId, token);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50], // Light background for contrast
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Image.asset(
+            'assets/Icons/cikis-yap.png',
+            width: 24,
+            height: 24,
+            fit: BoxFit.contain,
+            color: Colors.grey,
+          ),
+          onPressed: () async {
+            final authViewModel = Provider.of<AuthViewModel>(
+              context,
+              listen: false,
+            );
+            await authViewModel.logout();
+
+            if (context.mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            }
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: Image.asset(
+              'assets/Icons/bildirim.png',
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+              color: Colors.grey,
+            ),
+            onPressed: () {
+              // Notification logic
+            },
+          ),
+        ],
+      ),
+      body: Consumer<HomeViewModel>(
+        builder: (context, viewModel, child) {
+          if (viewModel.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (viewModel.errorMessage != null) {
+            if (viewModel.errorMessage == '403_LOGOUT') {
+              // Schedule navigation after build
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              });
+              return const SizedBox.shrink(); // Return empty while redirecting
+            }
+            return Center(child: Text('Error: ${viewModel.errorMessage}'));
+          }
+
+          final data = viewModel.homeData;
+          if (data == null) {
+            return const Center(child: Text('No data available'));
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(data),
+                const SizedBox(height: 24),
+                _buildStatisticsGrid(data.statistics),
+                const SizedBox(height: 1),
+                _buildOrderSummary(data.statistics),
+                const SizedBox(height: 24),
+                _buildFooter(data),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHeader(HomeData data) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.grey[200],
+            backgroundImage: data.storeLogo.isNotEmpty
+                ? NetworkImage(data.storeLogo)
+                : null,
+            child: data.storeLogo.isEmpty
+                ? const Icon(Icons.store, color: Colors.grey)
+                : null,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data.storeName,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  data.userFullname,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.star, color: AppTheme.primaryColor, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  data.storePoint,
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatisticsGrid(Statistics stats) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 1.5,
+      children: [
+        _buildStatCard(
+          'Toplam Ürün',
+          stats.totalSellerProducts.toString(),
+          Icons.inventory_2,
+        ),
+        _buildStatCard(
+          'Bekleyen Sipariş',
+          stats.pedingOrders.toString(),
+          Icons.pending_actions,
+        ),
+        _buildStatCard(
+          'Kargo',
+          stats.truckOrders.toString(),
+          Icons.local_shipping,
+        ),
+        _buildStatCard(
+          'Gelecek Ödeme',
+          stats.futurePayAmount,
+          Icons.account_balance_wallet,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: AppTheme.primaryColor, size: 28),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderSummary(Statistics stats) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Sipariş Özeti',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        _buildOrderSummaryCard('Bugün', stats.todayOrder),
+        const SizedBox(height: 12),
+        _buildOrderSummaryCard('Bu Hafta', stats.weekOrder),
+        const SizedBox(height: 12),
+        _buildOrderSummaryCard('Bu Ay', stats.monthOrder),
+      ],
+    );
+  }
+
+  Widget _buildOrderSummaryCard(String title, OrderStats orderStats) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Row(
+            children: [
+              Text(
+                '${orderStats.totalOrder} Sipariş',
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              ),
+              const SizedBox(width: 12),
+              Container(height: 20, width: 1, color: Colors.grey[300]),
+              const SizedBox(width: 12),
+              Text(
+                orderStats.totalAmount,
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter(HomeData data) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFC62828), // Red color from image
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              // Navigate to orders logic
+            },
+            child: const Text(
+              'Siparişleri Görüntüle',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'v${data.userVersion}',
+          style: const TextStyle(fontSize: 16, color: Colors.black),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Copyright © 2023 YDA Bilgi Teknolojileri',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            color: Color(
+              0xFFE65100,
+            ), // Orange-ish copyright color matches image
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
