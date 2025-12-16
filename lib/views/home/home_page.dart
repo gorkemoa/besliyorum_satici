@@ -5,6 +5,7 @@ import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import 'package:besliyorum_satici/models/home/home_model.dart';
 import '../auth/login_page.dart';
+import '../order/orders_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,8 +18,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // State'i hemen temizle ki build sırasında eski hata görünüp redirect olmasın
-    Provider.of<HomeViewModel>(context, listen: false).clearState();
+    // State'i sessizce temizle (notifyListeners çağırmadan)
+    Provider.of<HomeViewModel>(context, listen: false).resetState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
@@ -47,8 +48,8 @@ class _HomePageState extends State<HomePage> {
         leading: IconButton(
           icon: Image.asset(
             'assets/Icons/cikis-yap.png',
-            width: 24,
-            height: 24,
+            width: 20,
+            height: 20,
             fit: BoxFit.contain,
             color: Colors.grey,
           ),
@@ -70,8 +71,8 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Image.asset(
               'assets/Icons/bildirim.png',
-              width: 24,
-              height: 24,
+              width: 20,
+              height: 20,
               fit: BoxFit.contain,
               color: Colors.grey,
             ),
@@ -113,7 +114,6 @@ class _HomePageState extends State<HomePage> {
                 _buildHeader(data),
                 const SizedBox(height: 24),
                 _buildStatisticsGrid(data.statistics),
-                const SizedBox(height: 1),
                 _buildOrderSummary(data.statistics),
                 const SizedBox(height: 24),
                 _buildFooter(data),
@@ -337,13 +337,15 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             onPressed: () {
-              // Navigate to orders logic
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const OrdersPage()),
+              );
             },
             child: const Text(
               'Siparişleri Görüntüle',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
             ),

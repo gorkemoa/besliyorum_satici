@@ -39,10 +39,18 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
+  /// State'i temizler ve UI'ı bilgilendirir
   void clearState() {
     _errorMessage = null;
     _isLoading = false;
     _homeData = null;
     notifyListeners();
+  }
+
+  /// State'i sessizce temizler (initState için - notifyListeners çağırmaz)
+  void resetState() {
+    _errorMessage = null;
+    _isLoading = false;
+    _homeData = null;
   }
 }
