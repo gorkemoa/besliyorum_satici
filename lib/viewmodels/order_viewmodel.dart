@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:besliyorum_satici/models/order/order_model.dart';
 import 'package:besliyorum_satici/models/order/order_detail_model.dart';
+import 'package:besliyorum_satici/models/order/order_status_model.dart';
 import '../services/order_service.dart';
 
 class OrderViewModel extends ChangeNotifier {
@@ -27,6 +28,13 @@ class OrderViewModel extends ChangeNotifier {
 
   OrderDetailData? _orderDetail;
   OrderDetailData? get orderDetail => _orderDetail;
+
+  // Order Statuses State
+  List<OrderStatus> _orderStatuses = [];
+  List<OrderStatus> get orderStatuses => _orderStatuses;
+
+  bool _isStatusesLoading = false;
+  bool get isStatusesLoading => _isStatusesLoading;
 
   // Filtre değerleri
   String? _startDate;
@@ -136,6 +144,28 @@ class OrderViewModel extends ChangeNotifier {
     _isDetailLoading = false;
   }
 
+  /// Sipariş durumlarını yükler
+  Future<void> getOrderStatuses() async {
+    // Zaten yüklenmişse tekrar yükleme
+    if (_orderStatuses.isNotEmpty) return;
+
+    _isStatusesLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _orderService.getOrderStatuses();
+
+      if (response.success && response.data != null) {
+        _orderStatuses = response.data!;
+      }
+    } catch (e) {
+      // Hata durumunda sessizce devam et
+    } finally {
+      _isStatusesLoading = false;
+      notifyListeners();
+    }
+  }
+
   /// State'i temizler ve UI'ı bilgilendirir
   void clearState() {
     _errorMessage = null;
@@ -165,6 +195,7 @@ class OrderViewModel extends ChangeNotifier {
     _orderDetail = null;
     _detailErrorMessage = null;
     _isDetailLoading = false;
+    // _orderStatuses temizlenmez - cache'de kalır
   }
 
   /// Sipariş detay state'ini sessizce temizler (initState için)

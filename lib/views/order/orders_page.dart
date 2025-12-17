@@ -21,21 +21,14 @@ class _OrdersPageState extends State<OrdersPage> {
   final TextEditingController _endDateController = TextEditingController();
   int? _selectedStatus;
 
-  final List<Map<String, dynamic>> _statusOptions = [
-    {'value': null, 'label': 'Tümü'},
-    {'value': 1, 'label': 'Beklemede'},
-    {'value': 2, 'label': 'İşleme Alındı'},
-    {'value': 3, 'label': 'Kargoya Verildi'},
-    {'value': 4, 'label': 'Teslim Edildi'},
-    {'value': 5, 'label': 'İptal Edildi'},
-  ];
-
   @override
   void initState() {
     super.initState();
-    Provider.of<OrderViewModel>(context, listen: false).resetState();
+    final orderViewModel = Provider.of<OrderViewModel>(context, listen: false);
+    orderViewModel.resetState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      orderViewModel.getOrderStatuses();
       _loadOrders();
     });
   }
@@ -282,46 +275,58 @@ class _OrdersPageState extends State<OrdersPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _statusOptions.map((option) {
-                      final isSelected = _selectedStatus == option['value'];
-                      return GestureDetector(
-                        onTap: () {
-                          setModalState(() {
-                            _selectedStatus = option['value'];
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
+                  Consumer<OrderViewModel>(
+                    builder: (context, viewModel, child) {
+                      if (viewModel.isStatusesLoading) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppTheme.primaryColor
-                                : Colors.grey[100],
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppTheme.primaryColor
-                                  : Colors.grey[300]!,
+                        );
+                      }
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: viewModel.orderStatuses.map((status) {
+                          final isSelected = _selectedStatus == status.statusID;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                _selectedStatus = status.statusID;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppTheme.primaryColor
+                                    : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppTheme.primaryColor
+                                      : Colors.grey[300]!,
+                                ),
+                              ),
+                              child: Text(
+                                status.statusName,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.grey[700],
+                                ),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            option['label'],
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.grey[700],
-                            ),
-                          ),
-                        ),
+                          );
+                        }).toList(),
                       );
-                    }).toList(),
+                    },
                   ),
                   const SizedBox(height: 24),
 
@@ -680,7 +685,6 @@ class _OrdersPageState extends State<OrdersPage> {
   }
 
   Widget _buildOrderCard(Order order) {
-    final statusColor = Color(order.statusColor.colorValue);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -755,8 +759,7 @@ class _OrdersPageState extends State<OrdersPage> {
                     ),
                     _buildStatusBadge(
                       order.orderStatusTitle,
-                      statusColor,
-                      order.isCanceled,
+                      order.isCanceled
                     ),
                   ],
                 ),
@@ -857,22 +860,16 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  Widget _buildStatusBadge(String status, Color color, bool isCanceled) {
-    final displayColor = isCanceled ? Colors.red : color;
+  Widget _buildStatusBadge(String status, bool isCanceled) {
     final displayText = isCanceled ? 'İptal Edildi' : status;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: displayColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
       child: Text(
         displayText,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: displayColor,
         ),
       ),
     );

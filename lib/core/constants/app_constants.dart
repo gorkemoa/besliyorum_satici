@@ -12,6 +12,7 @@ class Endpoints {
   // Order Endpoints
   static const String orderList = 'service/user/account/order/list';
   static const String orderDetail = 'service/user/account/order/detail';
+  static const String orderStatuses = 'service/general/general/orderStatuses';
 
   // Notification Endpoints
   static const String notifications = 'service/user/account/notifications';

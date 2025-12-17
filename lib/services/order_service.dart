@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 
 import 'package:besliyorum_satici/models/order/order_model.dart';
 import 'package:besliyorum_satici/models/order/order_detail_model.dart';
+import 'package:besliyorum_satici/models/order/order_status_model.dart';
 import '../core/constants/app_constants.dart';
 import 'api_service.dart';
 
@@ -66,6 +67,19 @@ class OrderService {
       return OrderDetailResponseModel.fromJson(responseData);
     } catch (e) {
       _logger.e('Error fetching order detail', error: e);
+      rethrow;
+    }
+  }
+
+  /// Sipariş durumlarını getirir
+  Future<OrderStatusResponseModel> getOrderStatuses() async {
+    try {
+      final response = await _apiService.get(Endpoints.orderStatuses);
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return OrderStatusResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error fetching order statuses', error: e);
       rethrow;
     }
   }

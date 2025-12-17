@@ -215,7 +215,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   Widget _buildOrderHeader(OrderDetailData order) {
     final isCanceled = order.isCanceled;
-    final statusColor = isCanceled ? Colors.red : AppTheme.primaryColor;
     final statusText = isCanceled ? 'İptal Edildi' : order.orderStatusName;
 
     return _buildSectionContainer(
@@ -256,17 +255,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: statusColor.withOpacity(0.2)),
-                ),
                 child: Text(
                   statusText,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: statusColor,
                   ),
                 ),
               ),
@@ -393,8 +386,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildProductCard(OrderProduct product) {
-    final statusColor = Color(product.productStatusColor.colorValue);
-    final displayColor = product.canceled ? Colors.red : statusColor;
     final displayStatus = product.canceled ? 'İptal Edildi' : product.statusName;
 
     return _buildSectionContainer(
@@ -478,14 +469,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.info_outline_rounded, size: 16, color: displayColor),
+              Icon(Icons.info_outline_rounded, size: 16),
               const SizedBox(width: 6),
               Text(
                 displayStatus,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: displayColor,
                 ),
               ),
               if (product.isCargo && product.cargoCompany.isNotEmpty) ...[
@@ -506,21 +496,21 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withOpacity(0.1)),
+                  color: Colors.grey.withOpacity(0.05),
+                  border: Border.all(color: Colors.grey.withOpacity(0.1)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.location_searching_rounded, size: 16, color: Colors.blue),
+                    const Icon(Icons.location_searching_rounded, size: 16, color: Colors.grey),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Kargo Takip: ${product.trackingNumber}',
-                        style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.blue),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.grey),
                   ],
                 ),
               ),
