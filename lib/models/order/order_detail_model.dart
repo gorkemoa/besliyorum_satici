@@ -91,24 +91,7 @@ class OrderDetailData {
     );
   }
 
-  /// Sipariş durumuna göre renk döndürür
-  OrderDetailStatusColor get statusColor {
-    if (isCanceled) return OrderDetailStatusColor.canceled;
-    switch (orderStatus) {
-      case 1:
-        return OrderDetailStatusColor.pending;
-      case 2:
-        return OrderDetailStatusColor.processing;
-      case 3:
-        return OrderDetailStatusColor.shipped;
-      case 4:
-        return OrderDetailStatusColor.delivered;
-      case 5:
-        return OrderDetailStatusColor.canceled;
-      default:
-        return OrderDetailStatusColor.pending;
-    }
-  }
+
 }
 
 /// Sipariş ürünü modeli

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "446963677986",
+    "project_id": "besliyorum-satici-paneli",
+    "storage_bucket": "besliyorum-satici-paneli.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:446963677986:android:5802205094f88ab92f837b",
+        "android_client_info": {
+          "package_name": "com.office701.besliyorumsp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIAzWrPishV1KKdwg4DO8vvoooGf9l0q4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

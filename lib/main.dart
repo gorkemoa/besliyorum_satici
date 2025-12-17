@@ -5,10 +5,17 @@ import 'package:besliyorum_satici/core/theme/app_theme.dart';
 import 'package:besliyorum_satici/viewmodels/auth_viewmodel.dart';
 import 'package:besliyorum_satici/viewmodels/home_viewmodel.dart';
 import 'package:besliyorum_satici/viewmodels/order_viewmodel.dart';
+import 'package:besliyorum_satici/viewmodels/notification_viewmodel.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -23,7 +30,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => OrderViewModel()),
-
+        ChangeNotifierProvider(create: (_) => NotificationViewModel()),
       ],
       child: GestureDetector(
         onTap: () {

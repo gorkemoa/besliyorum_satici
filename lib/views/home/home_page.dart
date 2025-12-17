@@ -1,8 +1,10 @@
+import 'package:besliyorum_satici/views/notification/notifications_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/home_viewmodel.dart';
+import '../../viewmodels/notification_viewmodel.dart';
 import 'package:besliyorum_satici/models/home/home_model.dart';
 import '../auth/login_page.dart';
 import '../order/orders_page.dart';
@@ -29,12 +31,14 @@ class _HomePageState extends State<HomePage> {
   void _loadData() {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
+    final notificationViewModel = Provider.of<NotificationViewModel>(context, listen: false);
 
     final userId = authViewModel.loginResponse?.data?.userID;
     final token = authViewModel.loginResponse?.data?.token;
 
     if (userId != null && token != null) {
       homeViewModel.getUserAccount(userId, token);
+      notificationViewModel.getNotifications(token);
     }
   }
 
@@ -48,8 +52,8 @@ class _HomePageState extends State<HomePage> {
         leading: IconButton(
           icon: Image.asset(
             'assets/Icons/cikis-yap.png',
-            width: 20,
-            height: 20,
+            width: 25,
+            height: 25,
             fit: BoxFit.contain,
             color: Colors.grey,
           ),
@@ -68,16 +72,35 @@ class _HomePageState extends State<HomePage> {
           },
         ),
         actions: [
-          IconButton(
-            icon: Image.asset(
-              'assets/Icons/bildirim.png',
-              width: 20,
-              height: 20,
-              fit: BoxFit.contain,
-              color: Colors.grey,
-            ),
-            onPressed: () {
-              // Notification logic
+          Consumer<NotificationViewModel>(
+            builder: (context, notificationViewModel, child) {
+              final unreadCount = notificationViewModel.unreadCount;
+              return IconButton(
+                icon: Badge(
+                  isLabelVisible: unreadCount > 0,
+                  label: Text(
+                    unreadCount > 9 ? '9+' : unreadCount.toString(),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  backgroundColor: AppTheme.primaryColor,
+                  child: Image.asset(
+                    'assets/Icons/bildirim.png',
+                    width: 25,
+                    height: 25,
+                    fit: BoxFit.contain,
+                    color: Colors.grey,
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NotificationsPage()),
+                  );
+                },
+              );
             },
           ),
         ],

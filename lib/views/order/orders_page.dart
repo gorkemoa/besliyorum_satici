@@ -489,8 +489,8 @@ class _OrdersPageState extends State<OrdersPage> {
         leading: IconButton(
           icon: Image.asset(
             'assets/Icons/geri.png',
-            width: 20,
-            height: 20,
+            width: 25,
+            height: 25,
             fit: BoxFit.contain,
             color: Colors.grey,
           ),

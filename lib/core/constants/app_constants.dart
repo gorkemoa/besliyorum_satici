@@ -12,4 +12,9 @@ class Endpoints {
   // Order Endpoints
   static const String orderList = 'service/user/account/order/list';
   static const String orderDetail = 'service/user/account/order/detail';
+
+  // Notification Endpoints
+  static const String notifications = 'service/user/account/notifications';
+  static const String notificationRead = 'service/user/account/notification/read';
+  static const String notificationAllRead = 'service/user/account/notification/allRead';
 }
