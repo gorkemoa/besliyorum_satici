@@ -4,6 +4,7 @@ import 'package:besliyorum_satici/views/auth/login_page.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../services/firebase_messaging_service.dart';
 import '../home/home_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -45,6 +46,11 @@ class _SplashPageState extends State<SplashPage> {
             listen: false,
           );
           authViewModel.restoreSession(token, userId);
+
+          // Firebase topic'e abone ol (user ID ile)
+          await FirebaseMessagingService.subscribeToUserTopic(
+            userId.toString(),
+          );
 
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const HomePage()),

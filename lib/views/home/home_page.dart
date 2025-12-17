@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _loadData() {
+  Future<void> _loadData() async {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
     final notificationViewModel = Provider.of<NotificationViewModel>(context, listen: false);
@@ -37,8 +37,10 @@ class _HomePageState extends State<HomePage> {
     final token = authViewModel.loginResponse?.data?.token;
 
     if (userId != null && token != null) {
-      homeViewModel.getUserAccount(userId, token);
-      notificationViewModel.getNotifications(token);
+      await Future.wait([
+        homeViewModel.getUserAccount(userId, token),
+        notificationViewModel.getNotifications(token),
+      ]);
     }
   }
 
@@ -129,18 +131,23 @@ class _HomePageState extends State<HomePage> {
             return const Center(child: Text('No data available'));
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(data),
-                const SizedBox(height: 24),
-                _buildStatisticsGrid(data.statistics),
-                _buildOrderSummary(data.statistics),
-                const SizedBox(height: 24),
-                _buildFooter(data),
-              ],
+          return RefreshIndicator(
+            onRefresh: _loadData,
+            color: AppTheme.primaryColor,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(data),
+                  const SizedBox(height: 24),
+                  _buildStatisticsGrid(data.statistics),
+                  _buildOrderSummary(data.statistics),
+                  const SizedBox(height: 24),
+                  _buildFooter(data),
+                ],
+              ),
             ),
           );
         },

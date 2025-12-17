@@ -8,14 +8,36 @@ import 'package:besliyorum_satici/viewmodels/order_viewmodel.dart';
 import 'package:besliyorum_satici/viewmodels/notification_viewmodel.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
+import 'services/firebase_messaging_service.dart';
+import 'services/navigation_service.dart';
 
+/// Global Navigator Key - Push bildirimlerinden navigasyon için
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+/// Background message handler
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  debugPrint('📬 Background message: ${message.messageId}');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+
+  // Firebase'i başlat
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Firebase Messaging servisini başlat
+  await FirebaseMessagingService.initialize();
+
+  // Navigation Service'e navigator key'i ata
+  NavigationService.navigatorKey = navigatorKey;
+
   runApp(const MyApp());
 }
 
@@ -38,20 +60,19 @@ class MyApp extends StatelessWidget {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'Besliyorum Satıcı',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           home: const SplashPage(),
-                // 👇 BUNLAR ŞART
-        locale: const Locale('tr', 'TR'),
-        supportedLocales: const [
-          Locale('tr', 'TR'),
-        ],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate, // 👈 AY OLAYINI BU ÇÖZER
-        ]
+          // 👇 BUNLAR ŞART
+          locale: const Locale('tr', 'TR'),
+          supportedLocales: const [Locale('tr', 'TR')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate, // 👈 AY OLAYINI BU ÇÖZER
+          ],
         ),
       ),
     );

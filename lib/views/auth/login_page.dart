@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:besliyorum_satici/core/components/app_dialog.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../services/firebase_messaging_service.dart';
 import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -123,6 +124,14 @@ class _LoginPageState extends State<LoginPage> {
                                   }
                                 } else if (viewModel.loginResponse?.success ==
                                     true) {
+                                  // Firebase topic'e abone ol (user ID ile)
+                                  final userId =
+                                      viewModel.loginResponse?.data?.userID;
+                                  if (userId != null) {
+                                    await FirebaseMessagingService.subscribeToUserTopic(
+                                      userId.toString(),
+                                    );
+                                  }
                                   // Navigate to next screen or show success
                                   if (context.mounted) {
                                     Navigator.of(context).pushReplacement(
