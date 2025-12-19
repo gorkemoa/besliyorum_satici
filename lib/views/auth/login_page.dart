@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../services/firebase_messaging_service.dart';
 import '../home/home_page.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -197,18 +198,10 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          AppDialog.show(
-                            context: context,
-                            title: 'Kayıt Ol',
-                            content:
-                                'Satıcı kayıt sayfasına yönlendiriliyorsunuz.',
-                            type: AppDialogType.confirmation,
-                            confirmText: 'Devam Et',
-                            cancelText: 'İptal',
-                            onConfirm: () {
-                              Navigator.of(context).pop(); // Close dialog
-                              // Navigate to register...
-                            },
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterPage(),
+                            ),
                           );
                         },
                         child: Text(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import '../core/constants/app_constants.dart';
 import '../core/services/local_storage_service.dart';
 import 'package:besliyorum_satici/models/auth/login_model.dart';
+import 'package:besliyorum_satici/models/auth/register_model.dart';
 import 'api_service.dart';
 
 class AuthService {
@@ -27,6 +28,20 @@ class AuthService {
       return loginResponse;
     } catch (e) {
       throw Exception('Login failed: $e');
+    }
+  }
+
+  Future<RegisterResponseModel> register(RegisterRequestModel request) async {
+    try {
+      final response = await _apiService.post(
+        Endpoints.register,
+        body: request.toJson(),
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return RegisterResponseModel.fromJson(responseData);
+    } catch (e) {
+      throw Exception('Kayıt işlemi başarısız: $e');
     }
   }
 

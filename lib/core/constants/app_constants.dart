@@ -8,6 +8,12 @@ class AppConstants {
 
 class Endpoints {
   static const String login = 'service/auth/login';
+  static const String register = 'service/auth/register';
+
+  // Location Endpoints
+  static const String cities = 'service/general/general/cities/all';
+  static const String districts = 'service/general/general'; // /{cityNO}/districts
+  static const String neighborhoods = 'service/general/general'; // /{districtNO}/neighbourhood
 
   // Order Endpoints
   static const String orderList = 'service/user/account/order/list';
@@ -18,4 +24,9 @@ class Endpoints {
   static const String notifications = 'service/user/account/notifications';
   static const String notificationRead = 'service/user/account/notification/read';
   static const String notificationAllRead = 'service/user/account/notification/allRead';
+
+  // Contract/Policy Endpoints
+  static const String sellerPolicy = 'service/general/general/contracts/sellerPolicy';
+  static const String kvkkPolicy = 'service/general/general/contracts/kvkkPolicy';
+  static const String iyzicoPolicy = 'https://www.iyzico.com/pazaryeri-satici-anlasma';
 }
