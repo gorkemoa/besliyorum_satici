@@ -491,16 +491,7 @@ class _OrdersPageState extends State<OrdersPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Image.asset(
-            'assets/Icons/geri.png',
-            width: 25,
-            height: 25,
-            fit: BoxFit.contain,
-            color: Colors.grey,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+         
         centerTitle: true,
         title: const Text(
           'Siparişlerim',

@@ -7,7 +7,6 @@ import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import 'package:besliyorum_satici/models/home/home_model.dart';
 import '../auth/login_page.dart';
-import '../order/orders_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -53,25 +52,12 @@ class _HomePageState extends State<HomePage> {
         elevation: 0,
         leading: IconButton(
           icon: Image.asset(
-            'assets/Icons/cikis-yap.png',
-            width: 25,
-            height: 25,
+            'assets/Icons/bes-favicon.png',
+            width: 35,
+            height: 35,
             fit: BoxFit.contain,
-            color: Colors.grey,
           ),
-          onPressed: () async {
-            final authViewModel = Provider.of<AuthViewModel>(
-              context,
-              listen: false,
-            );
-            await authViewModel.logout();
-
-            if (context.mounted) {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              );
-            }
-          },
+          onPressed: () async { },
         ),
         actions: [
           Consumer<NotificationViewModel>(
@@ -143,9 +129,8 @@ class _HomePageState extends State<HomePage> {
                   _buildHeader(data),
                   const SizedBox(height: 24),
                   _buildStatisticsGrid(data.statistics),
-                  _buildOrderSummary(data.statistics),
                   const SizedBox(height: 24),
-                  _buildFooter(data),
+                  _buildOrderSummary(data.statistics),
                 ],
               ),
             ),
@@ -353,52 +338,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFooter(HomeData data) {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFC62828), // Red color from image
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const OrdersPage()),
-              );
-            },
-            child: const Text(
-              'Siparişleri Görüntüle',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'v${data.userVersion}',
-          style: const TextStyle(fontSize: 16, color: Colors.black),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Copyright © 2023 YDA Bilgi Teknolojileri',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            color: Color(
-              0xFFE65100,
-            ), // Orange-ish copyright color matches image
-          ),
-        ),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
 }

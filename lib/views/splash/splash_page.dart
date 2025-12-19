@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../services/firebase_messaging_service.dart';
-import '../home/home_page.dart';
+import '../main_navigation.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -53,7 +53,7 @@ class _SplashPageState extends State<SplashPage> {
           );
 
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomePage()),
+            MaterialPageRoute(builder: (context) => const MainNavigation()),
           );
           return;
         }
