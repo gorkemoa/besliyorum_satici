@@ -145,4 +145,56 @@ class OrderService {
       rethrow;
     }
   }
+
+  /// Kargo etiketi oluştur
+  /// [userToken] - Kullanıcı token'ı
+  /// [trackingNo] - Takip numarası
+  Future<CreateLabelResponseModel> createLabel(
+    String userToken,
+    String trackingNo,
+  ) async {
+    try {
+      final body = {
+        "userToken": userToken,
+        "trackingNo": trackingNo,
+      };
+
+      final response = await _apiService.post(Endpoints.createLabel, body: body);
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return CreateLabelResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error creating label', error: e);
+      rethrow;
+    }
+  }
+
+  /// Kargo ekle (sipariş veya ürün bazında)
+  /// [userToken] - Kullanıcı token'ı
+  /// [targetID] - Sipariş ID veya Ürün ID (opID)
+  /// [step] - 'order' veya 'product'
+  /// [trackingNo] - Takip numarası
+  Future<AddCargoResponseModel> addOrderCargo(
+    String userToken,
+    int targetID,
+    String step,
+    String trackingNo,
+  ) async {
+    try {
+      final body = {
+        "userToken": userToken,
+        "targetID": targetID,
+        "step": step,
+        "trackingNo": trackingNo,
+      };
+
+      final response = await _apiService.post(Endpoints.addOrderCargo, body: body);
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return AddCargoResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error adding cargo', error: e);
+      rethrow;
+    }
+  }
 }

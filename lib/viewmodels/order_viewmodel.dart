@@ -320,4 +320,148 @@ class OrderViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Create Label State
+  bool _isCreatingLabel = false;
+  bool get isCreatingLabel => _isCreatingLabel;
+
+  String? _createLabelErrorMessage;
+  String? get createLabelErrorMessage => _createLabelErrorMessage;
+
+  String? _createLabelSuccessMessage;
+  String? get createLabelSuccessMessage => _createLabelSuccessMessage;
+
+  CreateLabelData? _labelData;
+  CreateLabelData? get labelData => _labelData;
+
+  /// Kargo etiketi oluştur
+  Future<bool> createLabel(
+    String userToken,
+    String trackingNo,
+    int orderID,
+  ) async {
+    _isCreatingLabel = true;
+    _createLabelErrorMessage = null;
+    _createLabelSuccessMessage = null;
+    _labelData = null;
+    notifyListeners();
+
+    try {
+      final response = await _orderService.createLabel(userToken, trackingNo);
+
+      if (response.success && response.data != null) {
+        _createLabelSuccessMessage = response.successMessage ?? 'Etiket başarıyla oluşturuldu';
+        _labelData = response.data;
+        // Sipariş detayını yeniden yükle
+        await getOrderDetail(userToken, orderID);
+        return true;
+      } else {
+        _createLabelErrorMessage = 'Etiket oluşturulamadı';
+        return false;
+      }
+    } catch (e) {
+      if (e.toString().contains('403')) {
+        _createLabelErrorMessage = '403_LOGOUT';
+      } else {
+        _createLabelErrorMessage = e.toString();
+      }
+      return false;
+    } finally {
+      _isCreatingLabel = false;
+      notifyListeners();
+    }
+  }
+
+  // Add Cargo State
+  bool _isAddingCargo = false;
+  bool get isAddingCargo => _isAddingCargo;
+
+  String? _addCargoErrorMessage;
+  String? get addCargoErrorMessage => _addCargoErrorMessage;
+
+  String? _addCargoSuccessMessage;
+  String? get addCargoSuccessMessage => _addCargoSuccessMessage;
+
+  /// Kargo ekle (sipariş bazında - tümü kargolandi)
+  Future<bool> addOrderCargoAll(
+    String userToken,
+    int orderID,
+    String trackingNo,
+  ) async {
+    _isAddingCargo = true;
+    _addCargoErrorMessage = null;
+    _addCargoSuccessMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _orderService.addOrderCargo(
+        userToken,
+        orderID,
+        'order',
+        trackingNo,
+      );
+
+      if (response.success) {
+        _addCargoSuccessMessage = response.successMessage ?? 'Sipariş başarıyla kargoya verildi';
+        // Sipariş detayını yeniden yükle
+        await getOrderDetail(userToken, orderID);
+        return true;
+      } else {
+        _addCargoErrorMessage = 'Kargo eklenemedi';
+        return false;
+      }
+    } catch (e) {
+      if (e.toString().contains('403')) {
+        _addCargoErrorMessage = '403_LOGOUT';
+      } else {
+        _addCargoErrorMessage = e.toString();
+      }
+      return false;
+    } finally {
+      _isAddingCargo = false;
+      notifyListeners();
+    }
+  }
+
+  /// Kargo ekle (ürün bazında)
+  Future<bool> addProductCargo(
+    String userToken,
+    int orderID,
+    int opID,
+    String trackingNo,
+  ) async {
+    _isAddingCargo = true;
+    _addCargoErrorMessage = null;
+    _addCargoSuccessMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _orderService.addOrderCargo(
+        userToken,
+        opID,
+        'product',
+        trackingNo,
+      );
+
+      if (response.success) {
+        _addCargoSuccessMessage = response.successMessage ?? 'Ürün başarıyla kargoya verildi';
+        // Sipariş detayını yeniden yükle
+        await getOrderDetail(userToken, orderID);
+        return true;
+      } else {
+        _addCargoErrorMessage = 'Kargo eklenemedi';
+        return false;
+      }
+    } catch (e) {
+      if (e.toString().contains('403')) {
+        _addCargoErrorMessage = '403_LOGOUT';
+      } else {
+        _addCargoErrorMessage = e.toString();
+      }
+      return false;
+    } finally {
+      _isAddingCargo = false;
+      notifyListeners();
+    }
+  }
 }

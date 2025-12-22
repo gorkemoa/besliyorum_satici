@@ -504,3 +504,118 @@ class OrderCancelType {
     );
   }
 }
+
+/// Etiket oluşturma API response modeli
+class CreateLabelResponseModel {
+  final bool error;
+  final bool success;
+  final String? successMessage;
+  final CreateLabelData? data;
+  final String? code200;
+
+  CreateLabelResponseModel({
+    required this.error,
+    required this.success,
+    this.successMessage,
+    this.data,
+    this.code200,
+  });
+
+  factory CreateLabelResponseModel.fromJson(Map<String, dynamic> json) {
+    return CreateLabelResponseModel(
+      error: json['error'] ?? false,
+      success: json['success'] ?? false,
+      successMessage: json['success_message'],
+      data: json['data'] != null
+          ? CreateLabelData.fromJson(json['data'])
+          : null,
+      code200: json['200'],
+    );
+  }
+}
+
+/// Etiket oluşturma verisi
+class CreateLabelData {
+  final int orderID;
+  final int storeID;
+  final String orderCode;
+  final String trackingNo;
+  final String? labelData;
+  final String labelUrl;
+
+  CreateLabelData({
+    required this.orderID,
+    required this.storeID,
+    required this.orderCode,
+    required this.trackingNo,
+    this.labelData,
+    required this.labelUrl,
+  });
+
+  factory CreateLabelData.fromJson(Map<String, dynamic> json) {
+    return CreateLabelData(
+      orderID: json['orderID'] ?? 0,
+      storeID: json['storeID'] ?? 0,
+      orderCode: json['orderCode'] ?? '',
+      trackingNo: json['trackingNo'] ?? '',
+      labelData: json['labelData'],
+      labelUrl: json['labelUrl'] ?? '',
+    );
+  }
+}
+
+/// Kargo ekleme API response modeli
+class AddCargoResponseModel {
+  final bool error;
+  final bool success;
+  final String? successMessage;
+  final AddCargoData? data;
+  final String? code200;
+
+  AddCargoResponseModel({
+    required this.error,
+    required this.success,
+    this.successMessage,
+    this.data,
+    this.code200,
+  });
+
+  factory AddCargoResponseModel.fromJson(Map<String, dynamic> json) {
+    return AddCargoResponseModel(
+      error: json['error'] ?? false,
+      success: json['success'] ?? false,
+      successMessage: json['success_message'],
+      data: json['data'] != null
+          ? AddCargoData.fromJson(json['data'])
+          : null,
+      code200: json['200'],
+    );
+  }
+}
+
+/// Kargo ekleme verisi
+class AddCargoData {
+  final int orderID;
+  final int cargoID;
+  final String trackingNo;
+  final int orderStatusID;
+  final String orderStatus;
+
+  AddCargoData({
+    required this.orderID,
+    required this.cargoID,
+    required this.trackingNo,
+    required this.orderStatusID,
+    required this.orderStatus,
+  });
+
+  factory AddCargoData.fromJson(Map<String, dynamic> json) {
+    return AddCargoData(
+      orderID: json['orderID'] ?? 0,
+      cargoID: json['cargoID'] ?? 0,
+      trackingNo: json['trackingNo'] ?? '',
+      orderStatusID: json['orderStatusID'] ?? 0,
+      orderStatus: json['orderStatus'] ?? '',
+    );
+  }
+}

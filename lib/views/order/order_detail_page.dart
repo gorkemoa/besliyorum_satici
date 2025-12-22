@@ -192,6 +192,410 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     }
   }
 
+  Future<void> _createLabel(String trackingNo) async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final orderViewModel = Provider.of<OrderViewModel>(context, listen: false);
+
+    final token = authViewModel.loginResponse?.data?.token;
+    final orderDetail = orderViewModel.orderDetail;
+
+    if (token == null || orderDetail == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Etiket Oluştur'),
+        content: Text(
+          'Takip No: $trackingNo\n\nBu sipariş için kargo etiketi oluşturmak istediğinize emin misiniz?',
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Oluştur'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await orderViewModel.createLabel(
+        token,
+        trackingNo,
+        orderDetail.orderID,
+      );
+
+      if (mounted) {
+        if (orderViewModel.createLabelErrorMessage == '403_LOGOUT') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        } else if (success) {
+          // Başarılı - etiketi göster
+          _showLabelBottomSheet(orderViewModel.labelData!);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                orderViewModel.createLabelErrorMessage ?? 'Etiket oluşturulamadı',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showLabelBottomSheet(CreateLabelData labelData) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Kargo Etiketi',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // Etiket bilgileri
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.green),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Etiket başarıyla oluşturuldu!',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Takip No
+                      _buildLabelInfoRow('Takip No', labelData.trackingNo),
+                      _buildLabelInfoRow('Sipariş Kodu', labelData.orderCode),
+                      const SizedBox(height: 16),
+                      // Etiket görseli
+                      if (labelData.labelUrl.isNotEmpty) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            labelData.labelUrl,
+                            fit: BoxFit.contain,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                height: 200,
+                                alignment: Alignment.center,
+                                child: const CircularProgressIndicator(),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 100,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.error_outline, color: Colors.grey[400]),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Etiket yüklenemedi',
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // URL'yi aç butonu
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _openTrackingUrl(labelData.labelUrl),
+                            icon: const Icon(Icons.open_in_new),
+                            label: const Text('Etiketi Tarayıcıda Aç'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabelInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tüm siparişi kargoya ver
+  Future<void> _addCargoAll() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final orderViewModel = Provider.of<OrderViewModel>(context, listen: false);
+
+    final token = authViewModel.loginResponse?.data?.token;
+    final orderDetail = orderViewModel.orderDetail;
+
+    if (token == null || orderDetail == null) return;
+
+    // Takip numarası için dialog göster
+    final trackingNo = await _showTrackingNoDialog(
+      title: 'Tümünü Kargoya Ver',
+      message: 'Tüm ürünleri kargoya vermek için takip numarasını girin.',
+    );
+
+    if (trackingNo == null || trackingNo.isEmpty) return;
+
+    final success = await orderViewModel.addOrderCargoAll(
+      token,
+      orderDetail.orderID,
+      trackingNo,
+    );
+
+    if (mounted) {
+      if (orderViewModel.addCargoErrorMessage == '403_LOGOUT') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      } else if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              orderViewModel.addCargoSuccessMessage ?? 'Sipariş kargoya verildi',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              orderViewModel.addCargoErrorMessage ?? 'Kargo eklenemedi',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Ürünü kargoya ver
+  Future<void> _addProductCargo(OrderProduct product) async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final orderViewModel = Provider.of<OrderViewModel>(context, listen: false);
+
+    final token = authViewModel.loginResponse?.data?.token;
+    final orderDetail = orderViewModel.orderDetail;
+
+    if (token == null || orderDetail == null) return;
+
+    // Takip numarası için dialog göster
+    final trackingNo = await _showTrackingNoDialog(
+      title: 'Ürünü Kargoya Ver',
+      message: '${product.productName} ürününü kargoya vermek için takip numarasını girin.',
+    );
+
+    if (trackingNo == null || trackingNo.isEmpty) return;
+
+    final success = await orderViewModel.addProductCargo(
+      token,
+      orderDetail.orderID,
+      product.opID,
+      trackingNo,
+    );
+
+    if (mounted) {
+      if (orderViewModel.addCargoErrorMessage == '403_LOGOUT') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      } else if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              orderViewModel.addCargoSuccessMessage ?? 'Ürün kargoya verildi',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              orderViewModel.addCargoErrorMessage ?? 'Kargo eklenemedi',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Takip numarası giriş dialogu
+  Future<String?> _showTrackingNoDialog({
+    required String title,
+    required String message,
+  }) async {
+    final controller = TextEditingController();
+    
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                labelText: 'Takip Numarası',
+                hintText: 'Kargo takip numarasını girin',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.of(context).pop(controller.text.trim());
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Kargoya Ver'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _openTrackingUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -496,6 +900,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   Widget _buildOrderHeader(OrderDetailData order) {
     final isCanceled = order.isCanceled;
     final statusText = isCanceled ? 'İptal Edildi' : order.orderStatusName;
+    
+    // İlk ürünün tracking numarasını al
+    final trackingNo = order.products.isNotEmpty 
+        ? order.products.first.trackingNumber 
+        : '';
 
     return _buildSectionContainer(
       child: Column(
@@ -550,6 +959,154 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
             ],
           ),
+          // Etiket oluşturma butonu
+          if (order.isCreateLabel && trackingNo.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1, color: Color(0xFFEEEEEE)),
+            const SizedBox(height: 12),
+            Consumer<OrderViewModel>(
+              builder: (context, viewModel, child) {
+                return InkWell(
+                  onTap: viewModel.isCreatingLabel 
+                      ? null 
+                      : () => _createLabel(trackingNo),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.blue.withOpacity(0.1),
+                      border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.qr_code_2_rounded,
+                          size: 20,
+                          color: Colors.blue[700],
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kargo Etiketi Oluştur',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue[700],
+                                ),
+                              ),
+                              Text(
+                                'Takip No: $trackingNo',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.blue[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (viewModel.isCreatingLabel)
+                          const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.blue,
+                            ),
+                          )
+                        else
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                            color: Colors.blue[600],
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+          // Tümünü Kargoya Ver butonu
+          if (order.isMarkAllAsShipped) ...[
+            const SizedBox(height: 12),
+            if (!order.isCreateLabel || trackingNo.isEmpty)
+              const Divider(height: 1, color: Color(0xFFEEEEEE)),
+            if (!order.isCreateLabel || trackingNo.isEmpty)
+              const SizedBox(height: 12),
+            Consumer<OrderViewModel>(
+              builder: (context, viewModel, child) {
+                return InkWell(
+                  onTap: viewModel.isAddingCargo 
+                      ? null 
+                      : () => _addCargoAll(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.purple.withOpacity(0.1),
+                      border: Border.all(color: Colors.purple.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.local_shipping_rounded,
+                          size: 20,
+                          color: Colors.purple[700],
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Tümünü Kargoya Ver',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.purple[700],
+                                ),
+                              ),
+                              Text(
+                                'Tüm ürünleri tek seferde kargoya ver',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.purple[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (viewModel.isAddingCargo)
+                          const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.purple,
+                            ),
+                          )
+                        else
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                            color: Colors.purple[600],
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -881,6 +1438,65 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   ),
                 ],
               ),
+            ),
+          ],
+          // Ürünü Kargoya Ver butonu
+          if (product.isAddCargoable) ...[
+            const SizedBox(height: 12),
+            Consumer<OrderViewModel>(
+              builder: (context, viewModel, child) {
+                return InkWell(
+                  onTap: viewModel.isAddingCargo 
+                      ? null 
+                      : () => _addProductCargo(product),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.purple.withOpacity(0.1),
+                      border: Border.all(color: Colors.purple.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.local_shipping_rounded,
+                          size: 16,
+                          color: Colors.purple[700],
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Kargoya Ver',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.purple[700],
+                            ),
+                          ),
+                        ),
+                        if (viewModel.isAddingCargo)
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.purple,
+                            ),
+                          )
+                        else
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 12,
+                            color: Colors.purple[600],
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ],
