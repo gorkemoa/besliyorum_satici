@@ -9,6 +9,7 @@ class AppConstants {
 class Endpoints {
   static const String login = 'service/auth/login';
   static const String register = 'service/auth/register';
+  static const String storeControl = 'service/auth/register/storeControl';
 
   // Location Endpoints
   static const String cities = 'service/general/general/cities/all';
@@ -34,4 +35,9 @@ class Endpoints {
   static const String sellerPolicy = 'service/general/general/contracts/sellerPolicy';
   static const String kvkkPolicy = 'service/general/general/contracts/kvkkPolicy';
   static const String iyzicoPolicy = 'https://www.iyzico.com/pazaryeri-satici-anlasma';
+
+  // Product Endpoints
+  static const String sellerProducts = 'service/user/account/products/sellerProducts';
+  static const String catalogProducts = 'service/user/account/products/catalogProducts';
+  static const String categories = 'service/user/account/products/categories';
 }

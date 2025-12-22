@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:besliyorum_satici/views/home/home_page.dart';
 import 'package:besliyorum_satici/views/order/orders_page.dart';
-import 'package:besliyorum_satici/views/reports/products_page.dart';
+import 'package:besliyorum_satici/views/products/products_page.dart';
 import 'package:besliyorum_satici/views/profile/profile_page.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -17,7 +17,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _pages = [
     const HomePage(),
     const OrdersPage(),
-    const ReportsPage(),
+    const ProductsPage(),
     const ProfilePage(),
   ];
 

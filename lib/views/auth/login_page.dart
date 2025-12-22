@@ -34,26 +34,35 @@ class _LoginPageState extends State<LoginPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            
             // Top Section
             Container(
               width: double.infinity,
-              height: MediaQuery.of(context).size.height * 0.38,
+              height: MediaQuery.of(context).size.height * 0.35,
               decoration: BoxDecoration(
                 color: theme.primaryColor,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
                 ),
+             
               ),
+              
               child: Center(
+                
                 child: Padding(
-                  padding: const EdgeInsets.all(50.0),
+                  
+                  padding: const EdgeInsets.fromLTRB(0, 80, 0, 30),
                   child: Image.asset(
+                    
                     'assets/Icons/bes-logo-beyaz-sloganli.png',
                     fit: BoxFit.contain,
+                    
                   ),
+                
                 ),
               ),
+          
             ),
 
             // Bottom Section

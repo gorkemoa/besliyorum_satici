@@ -45,6 +45,19 @@ class AuthService {
     }
   }
 
+  Future<Map<String, dynamic>> checkStoreName(String storeName) async {
+    try {
+      final response = await _apiService.put(
+        Endpoints.storeControl,
+        body: {'storeName': storeName},
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Mağaza adı kontrolü başarısız: $e');
+    }
+  }
+
   Future<void> logout() async {
     await _localStorageService.clearAll();
   }

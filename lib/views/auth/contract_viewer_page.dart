@@ -10,8 +10,13 @@ enum ContractType { seller, kvkk, iyzico }
 
 class ContractViewerPage extends StatefulWidget {
   final ContractType contractType;
+  final VoidCallback? onAccepted;
 
-  const ContractViewerPage({super.key, required this.contractType});
+  const ContractViewerPage({
+    super.key,
+    required this.contractType,
+    this.onAccepted,
+  });
 
   @override
   State<ContractViewerPage> createState() => _ContractViewerPageState();
@@ -23,11 +28,36 @@ class _ContractViewerPageState extends State<ContractViewerPage> {
   String? _errorMessage;
   ContractModel? _contract;
   WebViewController? _webViewController;
+  final ScrollController _scrollController = ScrollController();
+  bool _hasScrolledToBottom = false;
 
   @override
   void initState() {
     super.initState();
     _loadContract();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    if (_scrollController.hasClients) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      // En alta 50 pixel kala kabul ediyoruz
+      if (maxScroll - currentScroll <= 50) {
+        if (!_hasScrolledToBottom) {
+          setState(() {
+            _hasScrolledToBottom = true;
+          });
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadContract() async {
@@ -180,13 +210,59 @@ class _ContractViewerPageState extends State<ContractViewerPage> {
     // iyzico için WebView
     if (widget.contractType == ContractType.iyzico &&
         _webViewController != null) {
-      return Stack(
+      return Column(
         children: [
-          WebViewWidget(controller: _webViewController!),
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primaryColor,
+          Expanded(
+            child: Stack(
+              children: [
+                WebViewWidget(controller: _webViewController!),
+                if (_isLoading)
+                  const Center(
+                    child: CircularProgressIndicator(
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Kabul Et Butonu - iyzico için scroll kontrolü yok
+          if (widget.onAccepted != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: ElevatedButton(
+                  onPressed: () {
+                    widget.onAccepted!();
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Okudum ve Kabul Ediyorum',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
             ),
         ],
@@ -195,42 +271,121 @@ class _ContractViewerPageState extends State<ContractViewerPage> {
 
     // Diğer sözleşmeler için metin görünümü
     if (_contract != null) {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Başlık
+      return Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Başlık
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _contract!.title,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // İçerik
+                  Text(
+                    _contract!.plainContent,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      height: 1.6,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+          // Kabul Et Butonu
+          if (widget.onAccepted != null)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
               ),
-              child: Text(
-                _contract!.title,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryColor,
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!_hasScrolledToBottom)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.arrow_downward,
+                              size: 16,
+                              color: Colors.orange,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Devam etmek için aşağı kaydırın',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ElevatedButton(
+                      onPressed: _hasScrolledToBottom
+                          ? () {
+                              widget.onAccepted!();
+                              Navigator.of(context).pop();
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        disabledForegroundColor: Colors.grey.shade500,
+                        padding: const EdgeInsets.symmetric(vertical: 12 , horizontal: 24),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Okudum ve Kabul Ediyorum',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            // İçerik
-            Text(
-              _contract!.plainContent,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                height: 1.6,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 40),
-          ],
-        ),
+        ],
       );
     }
 
@@ -242,10 +397,14 @@ class _ContractViewerPageState extends State<ContractViewerPage> {
 void showContractBottomSheet({
   required BuildContext context,
   required ContractType contractType,
+  VoidCallback? onAccepted,
 }) {
   Navigator.of(context).push(
     MaterialPageRoute(
-      builder: (context) => ContractViewerPage(contractType: contractType),
+      builder: (context) => ContractViewerPage(
+        contractType: contractType,
+        onAccepted: onAccepted,
+      ),
     ),
   );
 }

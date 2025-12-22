@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,6 +26,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _storeNameController = TextEditingController();
   final _addressController = TextEditingController();
   final _taxNoController = TextEditingController();
+  
+  Timer? _storeNameDebounce;
 
   @override
   void initState() {
@@ -32,10 +35,35 @@ class _RegisterPageState extends State<RegisterPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<RegisterViewModel>().loadCities();
     });
+    
+    // Store name debounce listener
+    _storeNameController.addListener(_onStoreNameChanged);
+  }
+  
+  void _onStoreNameChanged() {
+    // Cancel previous timer
+    _storeNameDebounce?.cancel();
+    
+    final storeName = _storeNameController.text.trim();
+    
+    // Reset validation if empty
+    if (storeName.isEmpty) {
+      context.read<RegisterViewModel>().resetStoreNameValidation();
+      return;
+    }
+    
+    // Start new timer (1.5 seconds debounce)
+    _storeNameDebounce = Timer(const Duration(milliseconds: 1500), () {
+      if (storeName.isNotEmpty) {
+        context.read<RegisterViewModel>().checkStoreName(storeName);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _storeNameDebounce?.cancel();
+    _storeNameController.removeListener(_onStoreNameChanged);
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -50,54 +78,45 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Top Section with Logo
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 30),
-                decoration: BoxDecoration(
-                  color: theme.primaryColor,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(40),
-                    bottomRight: Radius.circular(40),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    // Back Button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            icon: Image.asset(
-                              'assets/Icons/geri.png',
-                              width: 25,
-                              height: 25,
-                            ),
-                          ),
-                          const Spacer(),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 50),
-                      child: Image.asset(
-                        'assets/Icons/bes-logo-beyaz-sloganli.png',
-                        height: 100,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ],
+      appBar: null,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Top Section with Logo
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.only(
+                top: topPadding + 16,
+                bottom: 30,
+              ),
+              decoration: BoxDecoration(
+                color: theme.primaryColor,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
                 ),
               ),
+              child: Column(
+                children: [
+                  // Back Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 50),
+                    child: Image.asset(
+                      'assets/Icons/bes-logo-beyaz-sloganli.png',
+                      height: 200,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
               // Form Section
               Padding(
@@ -177,10 +196,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       const SizedBox(height: 12),
 
                       // Mağaza Adı
-                      _buildTextField(
-                        controller: _storeNameController,
-                        hintText: 'Mağaza Adı *',
-                        prefixIcon: Icons.store_outlined,
+                      Consumer<RegisterViewModel>(
+                        builder: (context, viewModel, child) {
+                          return _buildStoreNameField(viewModel);
+                        },
                       ),
                       const SizedBox(height: 12),
 
@@ -286,38 +305,35 @@ class _RegisterPageState extends State<RegisterPage> {
                             children: [
                               _buildCheckboxTile(
                                 value: viewModel.isPolicy,
-                                onChanged: (value) =>
-                                    viewModel.setPolicy(value ?? false),
                                 title: 'Üyelik Sözleşmesi',
                                 subtitle:
-                                    'Üyelik sözleşmesini okudum ve kabul ediyorum.',
+                                    'Sözleşmeyi okumak için tıklayın.',
                                 onTitleTap: () => showContractBottomSheet(
                                   context: context,
                                   contractType: ContractType.seller,
+                                  onAccepted: () => viewModel.setPolicy(true),
                                 ),
                               ),
                               _buildCheckboxTile(
                                 value: viewModel.isIyzicoPolicy,
-                                onChanged: (value) =>
-                                    viewModel.setIyzicoPolicy(value ?? false),
                                 title: 'iyzico Sözleşmesi',
                                 subtitle:
-                                    'iyzico ödeme sözleşmesini okudum ve kabul ediyorum.',
+                                    'Sözleşmeyi okumak için tıklayın.',
                                 onTitleTap: () => showContractBottomSheet(
                                   context: context,
                                   contractType: ContractType.iyzico,
+                                  onAccepted: () => viewModel.setIyzicoPolicy(true),
                                 ),
                               ),
                               _buildCheckboxTile(
                                 value: viewModel.isKvkkPolicy,
-                                onChanged: (value) =>
-                                    viewModel.setKvkkPolicy(value ?? false),
                                 title: 'KVKK Sözleşmesi',
                                 subtitle:
-                                    'Kişisel verilerin korunması sözleşmesini okudum ve kabul ediyorum.',
+                                    'Sözleşmeyi okumak için tıklayın.',
                                 onTitleTap: () => showContractBottomSheet(
                                   context: context,
                                   contractType: ContractType.kvkk,
+                                  onAccepted: () => viewModel.setKvkkPolicy(true),
                                 ),
                               ),
                             ],
@@ -394,7 +410,6 @@ class _RegisterPageState extends State<RegisterPage> {
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -462,6 +477,90 @@ class _RegisterPageState extends State<RegisterPage> {
           borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
         ),
       ),
+    );
+  }
+
+  Widget _buildStoreNameField(RegisterViewModel viewModel) {
+    Color? borderColor;
+    Widget? suffixWidget;
+
+    if (viewModel.isCheckingStoreName) {
+      suffixWidget = const SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: AppTheme.primaryColor,
+        ),
+      );
+    } else if (viewModel.isStoreNameAvailable == true) {
+      borderColor = Colors.green;
+      suffixWidget = const Icon(Icons.check_circle, color: Colors.green);
+    } else if (viewModel.isStoreNameAvailable == false) {
+      borderColor = Colors.red;
+      suffixWidget = const Icon(Icons.error, color: Colors.red);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _storeNameController,
+          decoration: InputDecoration(
+            hintText: 'Mağaza Adı *',
+            prefixIcon: const Icon(Icons.store_outlined, color: AppTheme.textSecondary),
+            suffixIcon: suffixWidget != null
+                ? Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: suffixWidget,
+                  )
+                : null,
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: borderColor ?? Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: borderColor ?? Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: borderColor ?? AppTheme.primaryColor,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+        if (viewModel.storeNameError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 12),
+            child: Text(
+              viewModel.storeNameError!,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.red,
+              ),
+            ),
+          ),
+        if (viewModel.isStoreNameAvailable == true)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 12),
+            child: Text(
+              'Mağaza adı kullanılabilir.',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.green,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -710,34 +809,35 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget _buildCheckboxTile({
     required bool value,
-    required void Function(bool?) onChanged,
     required String title,
     required String subtitle,
     VoidCallback? onTitleTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: value ? AppTheme.primaryColor : Colors.grey.shade300,
-        ),
-      ),
-      child: Row(
-        children: [
-          Checkbox(
-            value: value,
-            onChanged: onChanged,
-            activeColor: AppTheme.primaryColor,
-            checkColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
+    return GestureDetector(
+      onTap: value ? null : onTitleTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: value ? AppTheme.primaryColor : Colors.grey.shade300,
           ),
-          Expanded(
-            child: GestureDetector(
-              onTap: onTitleTap,
+        ),
+        child: Row(
+          children: [
+            IgnorePointer(
+              child: Checkbox(
+                value: value,
+                onChanged: (_) {},
+                activeColor: AppTheme.primaryColor,
+                checkColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Column(
@@ -745,39 +845,50 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          title,
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryColor,
-                            decoration: TextDecoration.underline,
-                            decorationColor: AppTheme.primaryColor,
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: value ? Colors.green : AppTheme.primaryColor,
+                              decoration: value ? null : TextDecoration.underline,
+                              decorationColor: AppTheme.primaryColor,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(
-                          Icons.open_in_new,
-                          size: 14,
-                          color: AppTheme.primaryColor,
-                        ),
+                        if (value)
+                          const Icon(
+                            Icons.check_circle,
+                            size: 18,
+                            color: Colors.green,
+                          )
+                        else
+                          const Icon(
+                            Icons.open_in_new,
+                            size: 14,
+                            color: AppTheme.primaryColor,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      subtitle,
+                      value 
+                          ? 'Sözleşme okundu ve kabul edildi.'
+                          : subtitle,
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: AppTheme.textSecondary,
+                        color: value ? Colors.green : AppTheme.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-        ],
+            const SizedBox(width: 8),
+          ],
+        ),
       ),
     );
   }

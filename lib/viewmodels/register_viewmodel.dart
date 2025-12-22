@@ -59,6 +59,16 @@ class RegisterViewModel extends ChangeNotifier {
   bool _isKvkkPolicy = false;
   bool get isKvkkPolicy => _isKvkkPolicy;
 
+  // Store Name Validation
+  bool _isCheckingStoreName = false;
+  bool get isCheckingStoreName => _isCheckingStoreName;
+
+  bool? _isStoreNameAvailable;
+  bool? get isStoreNameAvailable => _isStoreNameAvailable;
+
+  String? _storeNameError;
+  String? get storeNameError => _storeNameError;
+
   // Setters for policies
   void setPolicy(bool value) {
     _isPolicy = value;
@@ -72,6 +82,44 @@ class RegisterViewModel extends ChangeNotifier {
 
   void setKvkkPolicy(bool value) {
     _isKvkkPolicy = value;
+    notifyListeners();
+  }
+
+  Future<void> checkStoreName(String storeName) async {
+    if (storeName.trim().isEmpty) {
+      _isStoreNameAvailable = null;
+      _storeNameError = null;
+      notifyListeners();
+      return;
+    }
+
+    _isCheckingStoreName = true;
+    _storeNameError = null;
+    notifyListeners();
+
+    try {
+      final response = await _authService.checkStoreName(storeName);
+      
+      if (response['success'] == true) {
+        _isStoreNameAvailable = true;
+        _storeNameError = null;
+      } else {
+        _isStoreNameAvailable = false;
+        _storeNameError = response['error_message'] ?? 'Bu mağaza adı kullanılamaz.';
+      }
+    } catch (e) {
+      _isStoreNameAvailable = null;
+      _storeNameError = 'Kontrol sırasında bir hata oluştu.';
+    } finally {
+      _isCheckingStoreName = false;
+      notifyListeners();
+    }
+  }
+
+  void resetStoreNameValidation() {
+    _isStoreNameAvailable = null;
+    _storeNameError = null;
+    _isCheckingStoreName = false;
     notifyListeners();
   }
 
@@ -175,6 +223,12 @@ class RegisterViewModel extends ChangeNotifier {
     if (storeName.trim().isEmpty) {
       return 'Mağaza adı zorunludur.';
     }
+    if (_isStoreNameAvailable == false) {
+      return _storeNameError ?? 'Bu mağaza adı kullanılamaz.';
+    }
+    if (_isCheckingStoreName) {
+      return 'Mağaza adı kontrol ediliyor, lütfen bekleyin.';
+    }
     if (_selectedCity == null) {
       return 'İl seçimi zorunludur.';
     }
@@ -269,6 +323,9 @@ class RegisterViewModel extends ChangeNotifier {
     _isPolicy = false;
     _isIyzicoPolicy = false;
     _isKvkkPolicy = false;
+    _isStoreNameAvailable = null;
+    _storeNameError = null;
+    _isCheckingStoreName = false;
     notifyListeners();
   }
 }

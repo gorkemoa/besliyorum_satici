@@ -657,7 +657,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           'Sipariş Detayı',
           style: TextStyle(
             color: AppTheme.textPrimary,
-            fontSize: 14,
+            fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),

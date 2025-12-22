@@ -54,7 +54,9 @@ class ApiService {
         'GET Response: $url\nStatus: ${response.statusCode}\nBody: ${response.body}',
       );
 
-      if (response.statusCode == 417 || response.statusCode == 200) {
+      if (response.statusCode == 417 ||
+          response.statusCode == 410 ||
+          response.statusCode == 200) {
         return response;
       } else {
         throw Exception(
