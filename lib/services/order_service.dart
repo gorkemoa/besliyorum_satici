@@ -83,4 +83,66 @@ class OrderService {
       rethrow;
     }
   }
+
+  /// Siparişi onayla ve işleme al
+  /// [userToken] - Kullanıcı token'ı
+  /// [orderID] - Sipariş ID'si
+  Future<OrderConfirmResponseModel> confirmOrder(
+    String userToken,
+    int orderID,
+  ) async {
+    try {
+      final body = {
+        "userToken": userToken,
+        "orderID": orderID,
+      };
+
+      final response = await _apiService.post(Endpoints.orderConfirm, body: body);
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return OrderConfirmResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error confirming order', error: e);
+      rethrow;
+    }
+  }
+
+  /// Siparişi iptal et
+  /// [userToken] - Kullanıcı token'ı
+  /// [orderID] - Sipariş ID'si
+  /// [cancelProducts] - İptal edilecek ürünler listesi
+  Future<OrderCancelResponseModel> cancelOrder(
+    String userToken,
+    int orderID,
+    List<CancelProduct> cancelProducts,
+  ) async {
+    try {
+      final body = {
+        "userToken": userToken,
+        "orderID": orderID,
+        "cancelProducts": cancelProducts.map((e) => e.toJson()).toList(),
+      };
+
+      final response = await _apiService.post(Endpoints.orderCancel, body: body);
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return OrderCancelResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error canceling order', error: e);
+      rethrow;
+    }
+  }
+
+  /// Sipariş iptal nedenlerini getirir
+  Future<OrderCancelTypeResponseModel> getOrderCancelTypes() async {
+    try {
+      final response = await _apiService.get(Endpoints.orderCancelTypes);
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return OrderCancelTypeResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error fetching order cancel types', error: e);
+      rethrow;
+    }
+  }
 }

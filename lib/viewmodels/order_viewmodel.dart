@@ -204,4 +204,120 @@ class OrderViewModel extends ChangeNotifier {
     _detailErrorMessage = null;
     _isDetailLoading = false;
   }
+
+  // Order Confirm State
+  bool _isConfirming = false;
+  bool get isConfirming => _isConfirming;
+
+  String? _confirmErrorMessage;
+  String? get confirmErrorMessage => _confirmErrorMessage;
+
+  /// Siparişi onayla ve işleme al
+  Future<bool> confirmOrder(String userToken, int orderID) async {
+    _isConfirming = true;
+    _confirmErrorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _orderService.confirmOrder(userToken, orderID);
+
+      if (response.success) {
+        // Sipariş detayını yeniden yükle
+        await getOrderDetail(userToken, orderID);
+        return true;
+      } else {
+        _confirmErrorMessage = 'Sipariş onaylanamadı';
+        return false;
+      }
+    } catch (e) {
+      if (e.toString().contains('403')) {
+        _confirmErrorMessage = '403_LOGOUT';
+      } else {
+        _confirmErrorMessage = e.toString();
+      }
+      return false;
+    } finally {
+      _isConfirming = false;
+      notifyListeners();
+    }
+  }
+
+  // Order Cancel State
+  bool _isCanceling = false;
+  bool get isCanceling => _isCanceling;
+
+  String? _cancelErrorMessage;
+  String? get cancelErrorMessage => _cancelErrorMessage;
+
+  String? _cancelSuccessMessage;
+  String? get cancelSuccessMessage => _cancelSuccessMessage;
+
+  /// Siparişi iptal et
+  Future<bool> cancelOrder(
+    String userToken,
+    int orderID,
+    List<CancelProduct> cancelProducts,
+  ) async {
+    _isCanceling = true;
+    _cancelErrorMessage = null;
+    _cancelSuccessMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _orderService.cancelOrder(
+        userToken,
+        orderID,
+        cancelProducts,
+      );
+
+      if (response.success) {
+        _cancelSuccessMessage = response.successMessage ?? 'Ürünler başarıyla iptal edildi';
+        // Sipariş detayını yeniden yükle
+        await getOrderDetail(userToken, orderID);
+        return true;
+      } else {
+        _cancelErrorMessage = 'Sipariş iptal edilemedi';
+        return false;
+      }
+    } catch (e) {
+      if (e.toString().contains('403')) {
+        _cancelErrorMessage = '403_LOGOUT';
+      } else {
+        _cancelErrorMessage = e.toString();
+      }
+      return false;
+    } finally {
+      _isCanceling = false;
+      notifyListeners();
+    }
+  }
+
+  // Order Cancel Types State
+  List<OrderCancelType> _cancelTypes = [];
+  List<OrderCancelType> get cancelTypes => _cancelTypes;
+
+  bool _isCancelTypesLoading = false;
+  bool get isCancelTypesLoading => _isCancelTypesLoading;
+
+  /// Sipariş iptal nedenlerini yükler
+  Future<void> getOrderCancelTypes() async {
+    // Zaten yüklenmişse tekrar yükleme
+    if (_cancelTypes.isNotEmpty) return;
+
+    _isCancelTypesLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _orderService.getOrderCancelTypes();
+
+      if (response.success && response.data != null) {
+        _cancelTypes = response.data!;
+      }
+    } catch (e) {
+      // Hata durumunda sessizce devam et
+    } finally {
+      _isCancelTypesLoading = false;
+      notifyListeners();
+    }
+  }
 }

@@ -19,6 +19,9 @@ class Endpoints {
   static const String orderList = 'service/user/account/order/list';
   static const String orderDetail = 'service/user/account/order/detail';
   static const String orderStatuses = 'service/general/general/orderStatuses';
+  static const String orderConfirm = 'service/user/account/order/orderConfirm';
+  static const String orderCancel = 'service/user/account/order/orderCancel';
+  static const String orderCancelTypes = 'service/general/general/orderCancelTypes';
 
   // Notification Endpoints
   static const String notifications = 'service/user/account/notifications';

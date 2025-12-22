@@ -47,51 +47,67 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50], // Light background for contrast
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Image.asset(
-            'assets/Icons/bes-favicon.png',
-            width: 35,
-            height: 35,
-            fit: BoxFit.contain,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: AppBar(
+          backgroundColor: AppTheme.primaryColor,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.all(6.0),
+            child: GestureDetector(
+              onTap: () async { },
+              child: Image.asset(
+                'assets/Icons/logoyazi.png',
+                fit: BoxFit.contain,
+                color: Colors.white,
+              ),
+            ),
           ),
-          onPressed: () async { },
-        ),
+          leadingWidth: 180,
         actions: [
           Consumer<NotificationViewModel>(
             builder: (context, notificationViewModel, child) {
               final unreadCount = notificationViewModel.unreadCount;
-              return IconButton(
-                icon: Badge(
-                  isLabelVisible: unreadCount > 0,
-                  label: Text(
-                    unreadCount > 9 ? '9+' : unreadCount.toString(),
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
+              return Padding(
+                padding: const EdgeInsets.all(6.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  backgroundColor: AppTheme.primaryColor,
-                  child: Image.asset(
-                    'assets/Icons/bildirim.png',
-                    width: 25,
-                    height: 25,
-                    fit: BoxFit.contain,
-                    color: Colors.grey,
+                  child: IconButton(
+                    icon: Badge(
+                      isLabelVisible: unreadCount > 0,
+                      label: Text(
+                        unreadCount > 9 ? '9+' : unreadCount.toString(),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      backgroundColor: AppTheme.primaryColor,
+                      child: Image.asset(
+                        'assets/Icons/bildirim.png',
+                        width: 25,
+                        height: 25,
+                        fit: BoxFit.contain,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NotificationsPage()),
+                      );
+                    },
                   ),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const NotificationsPage()),
-                  );
-                },
               );
             },
           ),
+          const SizedBox(width: 8),
         ],
+        ),
       ),
       body: Consumer<HomeViewModel>(
         builder: (context, viewModel, child) {

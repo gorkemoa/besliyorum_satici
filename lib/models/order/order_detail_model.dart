@@ -37,6 +37,12 @@ class OrderDetailData {
   final String orderDate;
   final String deliveryDate;
   final String invoice;
+  final bool isConfirmable;
+  final bool isCancelable;
+  final bool isCreateLabel;
+  final bool isTrackingCargo;
+  final bool isMarkAllAsShipped;
+  final bool isPrintCargoLabel;
   final bool isCanceled;
   final List<OrderProduct> products;
   final OrderAddress shippingAddress;
@@ -55,6 +61,12 @@ class OrderDetailData {
     required this.orderDate,
     required this.deliveryDate,
     required this.invoice,
+    required this.isConfirmable,
+    required this.isCancelable,
+    required this.isCreateLabel,
+    required this.isTrackingCargo,
+    required this.isMarkAllAsShipped,
+    required this.isPrintCargoLabel,
     required this.isCanceled,
     required this.products,
     required this.shippingAddress,
@@ -75,6 +87,12 @@ class OrderDetailData {
       orderDate: json['orderDate'] ?? '',
       deliveryDate: json['deliveryDate'] ?? '',
       invoice: json['invoice'] ?? '',
+      isConfirmable: json['isConfirmable'] ?? false,
+      isCancelable: json['isCancelable'] ?? false,
+      isCreateLabel: json['isCreateLabel'] ?? false,
+      isTrackingCargo: json['isTrackingCargo'] ?? false,
+      isMarkAllAsShipped: json['isMarkAllAsShipped'] ?? false,
+      isPrintCargoLabel: json['isPrintCargoLabel'] ?? false,
       isCanceled: json['isCanceled'] ?? false,
       products:
           (json['products'] as List<dynamic>?)
@@ -90,8 +108,6 @@ class OrderDetailData {
       agreement: json['agreement'] ?? '',
     );
   }
-
-
 }
 
 /// Sipariş ürünü modeli
@@ -114,7 +130,7 @@ class OrderProduct {
   final String trackingNumber;
   final String trackingURL;
   final bool isConfirmable;
-  final bool isCargo;
+  final bool isAddCargoable;
   final bool isDelivered;
   final String productPrice;
   final String totalPrice;
@@ -145,7 +161,7 @@ class OrderProduct {
     required this.trackingNumber,
     required this.trackingURL,
     required this.isConfirmable,
-    required this.isCargo,
+    required this.isAddCargoable,
     required this.isDelivered,
     required this.productPrice,
     required this.totalPrice,
@@ -178,7 +194,7 @@ class OrderProduct {
       trackingNumber: json['trackingNumber'] ?? '',
       trackingURL: json['trackingURL'] ?? '',
       isConfirmable: json['isConfirmable'] ?? false,
-      isCargo: json['isCargo'] ?? false,
+      isAddCargoable: json['isAddCargoable'] ?? false,
       isDelivered: json['isDelivered'] ?? false,
       productPrice: json['productPrice'] ?? '',
       totalPrice: json['totalPrice'] ?? '',
@@ -307,4 +323,184 @@ enum ProductStatusColor {
 
   final int colorValue;
   const ProductStatusColor(this.colorValue);
+}
+
+/// Sipariş onaylama API response modeli
+class OrderConfirmResponseModel {
+  final bool error;
+  final bool success;
+  final String? successMessage;
+  final OrderConfirmData? data;
+  final String? code200;
+
+  OrderConfirmResponseModel({
+    required this.error,
+    required this.success,
+    this.successMessage,
+    this.data,
+    this.code200,
+  });
+
+  factory OrderConfirmResponseModel.fromJson(Map<String, dynamic> json) {
+    return OrderConfirmResponseModel(
+      error: json['error'] ?? false,
+      success: json['success'] ?? false,
+      successMessage: json['success_message'],
+      data: json['data'] != null
+          ? OrderConfirmData.fromJson(json['data'])
+          : null,
+      code200: json['200'],
+    );
+  }
+}
+
+/// Sipariş onaylama verisi
+class OrderConfirmData {
+  final int orderID;
+  final int cargoID;
+  final String trackingNo;
+  final int orderStatusID;
+  final String orderStatus;
+
+  OrderConfirmData({
+    required this.orderID,
+    required this.cargoID,
+    required this.trackingNo,
+    required this.orderStatusID,
+    required this.orderStatus,
+  });
+
+  factory OrderConfirmData.fromJson(Map<String, dynamic> json) {
+    return OrderConfirmData(
+      orderID: json['orderID'] ?? 0,
+      cargoID: json['cargoID'] ?? 0,
+      trackingNo: json['trackingNo'] ?? '',
+      orderStatusID: json['orderStatusID'] ?? 0,
+      orderStatus: json['orderStatus'] ?? '',
+    );
+  }
+}
+
+/// İptal edilecek ürün modeli
+class CancelProduct {
+  final int proID;
+  final int quantity;
+  final int cancelType;
+  final String cancelDesc;
+
+  CancelProduct({
+    required this.proID,
+    required this.quantity,
+    required this.cancelType,
+    required this.cancelDesc,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'proID': proID,
+      'quantity': quantity,
+      'cancelType': cancelType,
+      'cancelDesc': cancelDesc,
+    };
+  }
+}
+
+/// Sipariş iptal API response modeli
+class OrderCancelResponseModel {
+  final bool error;
+  final bool success;
+  final String? successMessage;
+  final OrderCancelData? data;
+  final String? code200;
+
+  OrderCancelResponseModel({
+    required this.error,
+    required this.success,
+    this.successMessage,
+    this.data,
+    this.code200,
+  });
+
+  factory OrderCancelResponseModel.fromJson(Map<String, dynamic> json) {
+    return OrderCancelResponseModel(
+      error: json['error'] ?? false,
+      success: json['success'] ?? false,
+      successMessage: json['success_message'],
+      data: json['data'] != null
+          ? OrderCancelData.fromJson(json['data'])
+          : null,
+      code200: json['200'],
+    );
+  }
+}
+
+/// Sipariş iptal verisi
+class OrderCancelData {
+  final int orderID;
+  final int storeID;
+  final String orderCode;
+  final int canceledCount;
+  final String orderStatus;
+
+  OrderCancelData({
+    required this.orderID,
+    required this.storeID,
+    required this.orderCode,
+    required this.canceledCount,
+    required this.orderStatus,
+  });
+
+  factory OrderCancelData.fromJson(Map<String, dynamic> json) {
+    return OrderCancelData(
+      orderID: json['orderID'] ?? 0,
+      storeID: json['storeID'] ?? 0,
+      orderCode: json['orderCode'] ?? '',
+      canceledCount: json['canceledCount'] ?? 0,
+      orderStatus: json['orderStatus'] ?? '',
+    );
+  }
+}
+
+/// Sipariş iptal nedenleri API response modeli
+class OrderCancelTypeResponseModel {
+  final bool error;
+  final bool success;
+  final List<OrderCancelType>? data;
+  final String? code200;
+
+  OrderCancelTypeResponseModel({
+    required this.error,
+    required this.success,
+    this.data,
+    this.code200,
+  });
+
+  factory OrderCancelTypeResponseModel.fromJson(Map<String, dynamic> json) {
+    return OrderCancelTypeResponseModel(
+      error: json['error'] ?? false,
+      success: json['success'] ?? false,
+      data: (json['data'] as List<dynamic>?)
+          ?.map((e) => OrderCancelType.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      code200: json['200'],
+    );
+  }
+}
+
+/// Sipariş iptal nedeni modeli
+class OrderCancelType {
+  final int typeID;
+  final String typeName;
+
+  OrderCancelType({
+    required this.typeID,
+    required this.typeName,
+  });
+
+  factory OrderCancelType.fromJson(Map<String, dynamic> json) {
+    return OrderCancelType(
+      typeID: json['typeID'] ?? 0,
+      typeName: json['typeName'] ?? '',
+    );
+  }
 }

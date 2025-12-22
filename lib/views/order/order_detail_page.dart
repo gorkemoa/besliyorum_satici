@@ -40,6 +40,158 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     }
   }
 
+  Future<void> _confirmOrder() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final orderViewModel = Provider.of<OrderViewModel>(context, listen: false);
+
+    final token = authViewModel.loginResponse?.data?.token;
+
+    if (token == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Siparişi Onayla'),
+        content: const Text(
+          'Siparişi onaylamak ve işleme almak istediğinize emin misiniz?',
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Onayla'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await orderViewModel.confirmOrder(token, widget.orderID);
+
+      if (mounted) {
+        if (orderViewModel.confirmErrorMessage == '403_LOGOUT') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        } else if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sipariş başarıyla onaylandı ve işleme alındı'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                orderViewModel.confirmErrorMessage ?? 'Sipariş onaylanamadı',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _cancelOrder() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final orderViewModel = Provider.of<OrderViewModel>(context, listen: false);
+
+    final token = authViewModel.loginResponse?.data?.token;
+    final orderDetail = orderViewModel.orderDetail;
+
+    if (token == null || orderDetail == null) return;
+
+    // İptal nedenlerini yükle
+    await orderViewModel.getOrderCancelTypes();
+
+    if (orderViewModel.cancelTypes.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('İptal nedenleri yüklenemedi'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // İptal edilebilir ürünleri filtrele
+    final cancelableProducts = orderDetail.products
+        .where((p) => !p.canceled && p.currentQuantity > 0)
+        .toList();
+
+    if (cancelableProducts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('İptal edilebilir ürün bulunmuyor'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // İptal dialog'unu göster
+    final result = await showModalBottomSheet<List<CancelProduct>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CancelOrderBottomSheet(
+        products: cancelableProducts,
+        orderID: orderDetail.orderID,
+        cancelTypes: orderViewModel.cancelTypes,
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final success = await orderViewModel.cancelOrder(
+        token,
+        orderDetail.orderID,
+        result,
+      );
+
+      if (mounted) {
+        if (orderViewModel.cancelErrorMessage == '403_LOGOUT') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        } else if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                orderViewModel.cancelSuccessMessage ?? 'Ürünler başarıyla iptal edildi',
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                orderViewModel.cancelErrorMessage ?? 'Ürünler iptal edilemedi',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _openTrackingUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -76,7 +228,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.black87),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: Colors.black87,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
@@ -113,29 +269,140 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             return _buildEmptyState();
           }
 
-          return RefreshIndicator(
-            color: AppTheme.primaryColor,
-            onRefresh: () async => _loadOrderDetail(),
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildOrderHeader(viewModel.orderDetail!),
-                  const SizedBox(height: 16),
-                  _buildProductsSection(viewModel.orderDetail!),
-                  const SizedBox(height: 16),
-                  _buildOrderSummary(viewModel.orderDetail!),
-                  const SizedBox(height: 16),
-                  _buildAddressSection(viewModel.orderDetail!),
-                  const SizedBox(height: 16),
-                  if (viewModel.orderDetail!.agreement.isNotEmpty)
-                    _buildAgreementSection(viewModel.orderDetail!),
-                  const SizedBox(height: 32),
-                ],
+          return Stack(
+            children: [
+              RefreshIndicator(
+                color: AppTheme.primaryColor,
+                onRefresh: () async => _loadOrderDetail(),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 16,
+                    bottom: (viewModel.orderDetail!.isConfirmable ||
+                            viewModel.orderDetail!.isCancelable)
+                        ? 100
+                        : 32,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildOrderHeader(viewModel.orderDetail!),
+                      const SizedBox(height: 16),
+                      _buildProductsSection(viewModel.orderDetail!),
+                      const SizedBox(height: 16),
+                      _buildOrderSummary(viewModel.orderDetail!),
+                      const SizedBox(height: 16),
+                      _buildAddressSection(viewModel.orderDetail!),
+                      const SizedBox(height: 16),
+                      if (viewModel.orderDetail!.agreement.isNotEmpty)
+                        _buildAgreementSection(viewModel.orderDetail!),
+                      const SizedBox(height: 36),
+                    ],
+
+                  ),
+                ),
               ),
-            ),
+              if (viewModel.orderDetail!.isConfirmable ||
+                  viewModel.orderDetail!.isCancelable)
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: SafeArea(
+                      child: Row(
+                        children: [
+                          if (viewModel.orderDetail!.isCancelable)
+                            Expanded(
+                              child: SizedBox(
+                                height: 53,
+                                child: OutlinedButton(
+                                  onPressed: viewModel.isCanceling
+                                      ? null
+                                      : _cancelOrder,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                    side: const BorderSide(color: Colors.red),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: viewModel.isCanceling
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.red,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'İptal Et',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          if (viewModel.orderDetail!.isCancelable &&
+                              viewModel.orderDetail!.isConfirmable)
+                            const SizedBox(width: 12),
+                          if (viewModel.orderDetail!.isConfirmable)
+                            Expanded(
+                              child: SizedBox(
+                                height: 53,
+                                child: ElevatedButton(
+                                  onPressed: viewModel.isConfirming
+                                      ? null
+                                      : _confirmOrder,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primaryColor,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: viewModel.isConfirming
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Onayla ve İşleme Al',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           );
         },
       ),
@@ -153,7 +420,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             const SizedBox(height: 16),
             Text(
               'Bir hata oluştu',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[800]),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -167,7 +438,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text('Tekrar Dene'),
             ),
@@ -186,14 +459,21 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           const SizedBox(height: 16),
           Text(
             'Sipariş bulunamadı',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600], fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionContainer({required Widget child, EdgeInsetsGeometry? padding}) {
+  Widget _buildSectionContainer({
+    required Widget child,
+    EdgeInsetsGeometry? padding,
+  }) {
     return Container(
       width: double.infinity,
       padding: padding ?? const EdgeInsets.all(16),
@@ -240,8 +520,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         ),
                         const SizedBox(width: 8),
                         InkWell(
-                          onTap: () => _copyToClipboard(order.orderCode, 'Sipariş kodu'),
-                          child: Icon(Icons.copy_rounded, size: 16, color: Colors.grey[400]),
+                          onTap: () =>
+                              _copyToClipboard(order.orderCode, 'Sipariş kodu'),
+                          child: Icon(
+                            Icons.copy_rounded,
+                            size: 16,
+                            color: Colors.grey[400],
+                          ),
                         ),
                       ],
                     ),
@@ -254,13 +539,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 child: Text(
                   statusText,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -297,11 +582,23 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Divider(height: 1, color: Color(0xFFEEEEEE)),
               ),
-              if (order.orderDiscount.isNotEmpty && order.orderDiscount != '0' && order.orderDiscount != '0,00 TL') ...[
-                _buildSummaryRow('İndirim', '-${order.orderDiscount}', valueColor: Colors.green),
+              if (order.orderDiscount.isNotEmpty &&
+                  order.orderDiscount != '0' &&
+                  order.orderDiscount != '0,00 TL') ...[
+                _buildSummaryRow(
+                  'İndirim',
+                  '-${order.orderDiscount}',
+                  valueColor: Colors.green,
+                ),
                 const SizedBox(height: 12),
               ],
-              _buildSummaryRow('Toplam Tutar', order.orderAmount, isBold: true, valueColor: AppTheme.primaryColor, valueSize: 18),
+              _buildSummaryRow(
+                'Toplam Tutar',
+                order.orderAmount,
+                isBold: true,
+                valueColor: AppTheme.primaryColor,
+                valueSize: 18,
+              ),
               if (order.orderDescription.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Container(
@@ -317,12 +614,19 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     children: [
                       Text(
                         'Sipariş Notu',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber[800]),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber[800],
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         order.orderDescription,
-                        style: TextStyle(fontSize: 13, color: Colors.amber[900]),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.amber[900],
+                        ),
                       ),
                     ],
                   ),
@@ -335,7 +639,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isBold = false, Color? valueColor, double? valueSize}) {
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isBold = false,
+    Color? valueColor,
+    double? valueSize,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -379,14 +689,17 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           physics: const NeverScrollableScrollPhysics(),
           itemCount: order.products.length,
           separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) => _buildProductCard(order.products[index]),
+          itemBuilder: (context, index) =>
+              _buildProductCard(order.products[index]),
         ),
       ],
     );
   }
 
   Widget _buildProductCard(OrderProduct product) {
-    final displayStatus = product.canceled ? 'İptal Edildi' : product.statusName;
+    final displayStatus = product.canceled
+        ? 'İptal Edildi'
+        : product.statusName;
 
     return _buildSectionContainer(
       padding: const EdgeInsets.all(12),
@@ -407,7 +720,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       width: 70,
                       height: 70,
                       color: Colors.grey[100],
-                      child: Icon(Icons.image_not_supported_outlined, color: Colors.grey[400]),
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
+                        color: Colors.grey[400],
+                      ),
                     );
                   },
                 ),
@@ -439,14 +755,21 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             '${product.currentQuantity} Adet',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                         Text(
@@ -473,28 +796,39 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               const SizedBox(width: 6),
               Text(
                 displayStatus,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
-              if (product.isCargo && product.cargoCompany.isNotEmpty) ...[
+              if (product.cargoAmount.isNotEmpty ||
+                  product.cargoCompany.isNotEmpty) ...[
                 const Spacer(),
-                Icon(Icons.local_shipping_outlined, size: 16, color: Colors.grey[600]),
+                Icon(
+                  Icons.local_shipping_outlined,
+                  size: 16,
+                  color: Colors.grey[600],
+                ),
                 const SizedBox(width: 4),
                 Text(
                   product.cargoCompany,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ],
           ),
-          if (product.isCargo && product.trackingNumber.isNotEmpty && product.trackingURL.isNotEmpty) ...[
+          if (product.cargoCompany.isNotEmpty ||
+              product.trackingNumber.isNotEmpty ||
+              product.trackingURL.isNotEmpty) ...[
             const SizedBox(height: 12),
             InkWell(
               onTap: () => _openTrackingUrl(product.trackingURL),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   color: Colors.grey.withOpacity(0.05),
@@ -502,15 +836,27 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.location_searching_rounded, size: 16, color: Colors.grey),
+                    const Icon(
+                      Icons.location_searching_rounded,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Kargo Takip: ${product.trackingNumber}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.grey),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 12,
+                      color: Colors.grey,
+                    ),
                   ],
                 ),
               ),
@@ -590,12 +936,20 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           const SizedBox(height: 12),
           Text(
             address.addressName,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             address.address,
-            style: TextStyle(fontSize: 13, color: Colors.grey[600], height: 1.4),
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+              height: 1.4,
+            ),
           ),
           if (showInvoiceDetails && address.isCorporate) ...[
             const SizedBox(height: 12),
@@ -614,21 +968,29 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   if (address.taxNumber.isNotEmpty)
                     _buildInvoiceRow('Vergi No', address.taxNumber),
                   if (address.taxAdministration.isNotEmpty)
-                    _buildInvoiceRow('Vergi Dairesi', address.taxAdministration),
+                    _buildInvoiceRow(
+                      'Vergi Dairesi',
+                      address.taxAdministration,
+                    ),
                 ],
               ),
             ),
-          ] else if (showInvoiceDetails && !address.isCorporate && address.identityNumber.isNotEmpty) ...[
-             const SizedBox(height: 12),
-             Container(
-               padding: const EdgeInsets.all(10),
-               decoration: BoxDecoration(
-                 color: Colors.grey[50],
-                 borderRadius: BorderRadius.circular(8),
-                 border: Border.all(color: Colors.grey[200]!),
-               ),
-               child: _buildInvoiceRow('TC Kimlik', _maskIdentityNumber(address.identityNumber)),
-             ),
+          ] else if (showInvoiceDetails &&
+              !address.isCorporate &&
+              address.identityNumber.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: _buildInvoiceRow(
+                'TC Kimlik',
+                _maskIdentityNumber(address.identityNumber),
+              ),
+            ),
           ],
         ],
       ),
@@ -640,9 +1002,19 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Text('$label: ', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          Text(
+            '$label: ',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87)),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
           ),
         ],
       ),
@@ -668,19 +1040,35 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 color: Colors.orange.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.description_outlined, color: Colors.orange, size: 20),
+              child: const Icon(
+                Icons.description_outlined,
+                color: Colors.orange,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
                 'Mesafeli Satış Sözleşmesi',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: Colors.grey,
+            ),
+
           ],
+    
         ),
+    
       ),
+   
     );
   }
 
@@ -716,7 +1104,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   children: [
                     const Text(
                       'Sözleşme',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
@@ -746,5 +1137,470 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         ),
       ),
     );
+  }
+}
+
+/// İptal ürün seçimi için bottom sheet
+class _CancelOrderBottomSheet extends StatefulWidget {
+  final List<OrderProduct> products;
+  final int orderID;
+  final List<OrderCancelType> cancelTypes;
+
+  const _CancelOrderBottomSheet({
+    required this.products,
+    required this.orderID,
+    required this.cancelTypes,
+  });
+
+  @override
+  State<_CancelOrderBottomSheet> createState() => _CancelOrderBottomSheetState();
+}
+
+class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
+  // Seçili ürünler: key = productID, value = {quantity, cancelType, cancelDesc}
+  final Map<int, _CancelProductSelection> _selectedProducts = {};
+  // Her ürün için açıklama controller'ı
+  final Map<int, TextEditingController> _descControllers = {};
+
+  @override
+  void dispose() {
+    for (var controller in _descControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _allSelectionsValid {
+    return _selectedProducts.values.every((s) => s.isValid);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Ürün İptal Et',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView.separated(
+                controller: scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: widget.products.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final product = widget.products[index];
+                  final isSelected = _selectedProducts.containsKey(product.productID);
+                  final selection = _selectedProducts[product.productID];
+
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.red.withOpacity(0.05) : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? Colors.red.withOpacity(0.3) : Colors.grey.shade200,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Checkbox(
+                              value: isSelected,
+                              activeColor: Colors.red,
+                              onChanged: (value) {
+                                setState(() {
+                                  if (value == true) {
+                                    final firstType = widget.cancelTypes.first;
+                                    _descControllers[product.productID] = TextEditingController();
+                                    _selectedProducts[product.productID] = _CancelProductSelection(
+                                      proID: product.productID,
+                                      quantity: product.currentQuantity,
+                                      maxQuantity: product.currentQuantity,
+                                      cancelType: firstType.typeID,
+                                      cancelDesc: firstType.typeName,
+                                    );
+                                  } else {
+                                    _descControllers[product.productID]?.dispose();
+                                    _descControllers.remove(product.productID);
+                                    _selectedProducts.remove(product.productID);
+                                  }
+                                });
+                              },
+                            ),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                product.productImage,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    width: 50,
+                                    height: 50,
+                                    color: Colors.grey[100],
+                                    child: Icon(
+                                      Icons.image_not_supported_outlined,
+                                      color: Colors.grey[400],
+                                      size: 20,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product.productName,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (product.variants.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      product.variants,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Mevcut: ${product.currentQuantity} Adet',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (isSelected) ...[
+                          const SizedBox(height: 12),
+                          const Divider(height: 1),
+                          const SizedBox(height: 12),
+                          // Miktar seçimi
+                          Row(
+                            children: [
+                              const Text(
+                                'İptal Miktarı:',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove, size: 18),
+                                      onPressed: selection!.quantity > 1
+                                          ? () {
+                                              setState(() {
+                                                _selectedProducts[product.productID] =
+                                                    selection.copyWith(
+                                                        quantity: selection.quantity - 1);
+                                              });
+                                            }
+                                          : null,
+                                      padding: const EdgeInsets.all(4),
+                                      constraints: const BoxConstraints(),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      child: Text(
+                                        '${selection.quantity}',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add, size: 18),
+                                      onPressed: selection.quantity < selection.maxQuantity
+                                          ? () {
+                                              setState(() {
+                                                _selectedProducts[product.productID] =
+                                                    selection.copyWith(
+                                                        quantity: selection.quantity + 1);
+                                              });
+                                            }
+                                          : null,
+                                      padding: const EdgeInsets.all(4),
+                                      constraints: const BoxConstraints(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // İptal nedeni
+                          const Text(
+                            'İptal Nedeni:',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<int>(
+                                value: selection.cancelType,
+                                isExpanded: true,
+                                items: widget.cancelTypes.map((type) {
+                                  return DropdownMenuItem<int>(
+                                    value: type.typeID,
+                                    child: Text(type.typeName),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    final type = widget.cancelTypes.firstWhere((t) => t.typeID == value);
+                                    setState(() {
+                                      _selectedProducts[product.productID] = selection.copyWith(
+                                        cancelType: value,
+                                        cancelDesc: type.typeName,
+                                      );
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Açıklama alanı
+                          Text(
+                            selection.cancelType == 13
+                                ? 'Açıklama (Zorunlu):'
+                                : 'Açıklama (İsteğe Bağlı):',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: selection.cancelType == 13 && selection.customDesc.trim().isEmpty
+                                  ? Colors.red
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _descControllers[product.productID],
+                            decoration: InputDecoration(
+                              hintText: 'İptal nedenini açıklayın...',
+                              hintStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[400],
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: selection.cancelType == 13 && selection.customDesc.trim().isEmpty
+                                      ? Colors.red.shade300
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: selection.cancelType == 13
+                                      ? Colors.red
+                                      : AppTheme.primaryColor,
+                                ),
+                              ),
+                            ),
+                            maxLines: 2,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedProducts[product.productID] = selection.copyWith(
+                                  customDesc: value,
+                                );
+                              });
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 53,
+                  child: ElevatedButton(
+                    onPressed: _selectedProducts.isEmpty || !_allSelectionsValid
+                        ? null
+                        : () {
+                            final cancelProducts = _selectedProducts.values
+                                .map((s) => CancelProduct(
+                                      proID: s.proID,
+                                      quantity: s.quantity,
+                                      cancelType: s.cancelType,
+                                      cancelDesc: s.finalDesc,
+                                    ))
+                                .toList();
+                            Navigator.pop(context, cancelProducts);
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey[300],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      _selectedProducts.isEmpty
+                          ? 'Ürün Seçin'
+                          : '${_selectedProducts.length} Ürünü İptal Et',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// İptal ürün seçimi için yardımcı model
+class _CancelProductSelection {
+  final int proID;
+  final int quantity;
+  final int maxQuantity;
+  final int cancelType;
+  final String cancelDesc;
+  final String customDesc;
+
+  _CancelProductSelection({
+    required this.proID,
+    required this.quantity,
+    required this.maxQuantity,
+    required this.cancelType,
+    required this.cancelDesc,
+    this.customDesc = '',
+  });
+
+  _CancelProductSelection copyWith({
+    int? proID,
+    int? quantity,
+    int? maxQuantity,
+    int? cancelType,
+    String? cancelDesc,
+    String? customDesc,
+  }) {
+    return _CancelProductSelection(
+      proID: proID ?? this.proID,
+      quantity: quantity ?? this.quantity,
+      maxQuantity: maxQuantity ?? this.maxQuantity,
+      cancelType: cancelType ?? this.cancelType,
+      cancelDesc: cancelDesc ?? this.cancelDesc,
+      customDesc: customDesc ?? this.customDesc,
+    );
+  }
+
+  /// "Diğer" seçildiğinde customDesc zorunlu
+  bool get isValid {
+    // typeID 13 = Diğer
+    if (cancelType == 13) {
+      return customDesc.trim().isNotEmpty;
+    }
+    return true;
+  }
+
+  /// API'ye gönderilecek açıklama
+  String get finalDesc {
+    if (customDesc.trim().isNotEmpty) {
+      return customDesc.trim();
+    }
+    return cancelDesc;
   }
 }

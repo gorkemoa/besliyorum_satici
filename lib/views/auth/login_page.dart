@@ -1,9 +1,9 @@
+import 'package:besliyorum_satici/views/main_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:besliyorum_satici/core/components/app_dialog.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../services/firebase_messaging_service.dart';
-import '../home/home_page.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -137,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
                                   if (context.mounted) {
                                     Navigator.of(context).pushReplacement(
                                       MaterialPageRoute(
-                                        builder: (context) => const HomePage(),
+                                        builder: (context) => const MainNavigation(),
                                       ),
                                     );
                                   }
