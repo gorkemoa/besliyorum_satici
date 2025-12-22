@@ -383,12 +383,14 @@ class OrderConfirmData {
 
 /// İptal edilecek ürün modeli
 class CancelProduct {
+  final int opID;
   final int proID;
   final int quantity;
   final int cancelType;
   final String cancelDesc;
 
   CancelProduct({
+    required this.opID,
     required this.proID,
     required this.quantity,
     required this.cancelType,
@@ -397,6 +399,7 @@ class CancelProduct {
 
   Map<String, dynamic> toJson() {
     return {
+      'opID': opID,
       'proID': proID,
       'quantity': quantity,
       'cancelType': cancelType,

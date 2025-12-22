@@ -83,10 +83,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           );
         } else if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sipariş başarıyla onaylandı ve işleme alındı'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
+            SnackBar(
+              content: const Text(
+                'Sipariş başarıyla onaylandı ve işleme alındı',
+              ),
+              backgroundColor: AppTheme.successColor,
+              duration: const Duration(seconds: 3),
             ),
           );
         } else {
@@ -95,7 +97,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               content: Text(
                 orderViewModel.confirmErrorMessage ?? 'Sipariş onaylanamadı',
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.errorColor,
               duration: const Duration(seconds: 3),
             ),
           );
@@ -119,9 +121,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     if (orderViewModel.cancelTypes.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('İptal nedenleri yüklenemedi'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('İptal nedenleri yüklenemedi'),
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -171,7 +173,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                orderViewModel.cancelSuccessMessage ?? 'Ürünler başarıyla iptal edildi',
+                orderViewModel.cancelSuccessMessage ??
+                    'Ürünler başarıyla iptal edildi',
               ),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 3),
@@ -183,7 +186,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               content: Text(
                 orderViewModel.cancelErrorMessage ?? 'Ürünler iptal edilemedi',
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.errorColor,
               duration: const Duration(seconds: 3),
             ),
           );
@@ -217,8 +220,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: AppTheme.secondaryColor,
             ),
             child: const Text('Oluştur'),
           ),
@@ -245,9 +248,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                orderViewModel.createLabelErrorMessage ?? 'Etiket oluşturulamadı',
+                orderViewModel.createLabelErrorMessage ??
+                    'Etiket oluşturulamadı',
               ),
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.errorColor,
               duration: const Duration(seconds: 3),
             ),
           );
@@ -286,11 +290,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Kargo Etiketi',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
                       ),
                     ),
                     IconButton(
@@ -311,19 +316,23 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
+                          color: AppTheme.successColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.check_circle, color: Colors.green),
+                            Icon(
+                              Icons.check_circle,
+                              color: AppTheme.successColor,
+                            ),
                             const SizedBox(width: 8),
-                            const Expanded(
+                            Expanded(
                               child: Text(
                                 'Etiket başarıyla oluşturuldu!',
                                 style: TextStyle(
-                                  color: Colors.green,
+                                  color: AppTheme.successColor,
                                   fontWeight: FontWeight.w600,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
@@ -361,7 +370,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.error_outline, color: Colors.grey[400]),
+                                    Icon(
+                                      Icons.error_outline,
+                                      color: Colors.grey[400],
+                                    ),
                                     const SizedBox(height: 8),
                                     Text(
                                       'Etiket yüklenemedi',
@@ -378,7 +390,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed: () => _openTrackingUrl(labelData.labelUrl),
+                            onPressed: () =>
+                                _openTrackingUrl(labelData.labelUrl),
                             icon: const Icon(Icons.open_in_new),
                             label: const Text('Etiketi Tarayıcıda Aç'),
                             style: OutlinedButton.styleFrom(
@@ -409,16 +422,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 14,
+            style: TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
             ),
           ),
         ],
@@ -459,9 +470,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              orderViewModel.addCargoSuccessMessage ?? 'Sipariş kargoya verildi',
+              orderViewModel.addCargoSuccessMessage ??
+                  'Sipariş kargoya verildi',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.successColor,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -471,7 +483,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             content: Text(
               orderViewModel.addCargoErrorMessage ?? 'Kargo eklenemedi',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -492,7 +504,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     // Takip numarası için dialog göster
     final trackingNo = await _showTrackingNoDialog(
       title: 'Ürünü Kargoya Ver',
-      message: '${product.productName} ürününü kargoya vermek için takip numarasını girin.',
+      message:
+          '${product.productName} ürününü kargoya vermek için takip numarasını girin.',
     );
 
     if (trackingNo == null || trackingNo.isEmpty) return;
@@ -515,7 +528,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             content: Text(
               orderViewModel.addCargoSuccessMessage ?? 'Ürün kargoya verildi',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.successColor,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -525,7 +538,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             content: Text(
               orderViewModel.addCargoErrorMessage ?? 'Kargo eklenemedi',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -539,7 +552,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     required String message,
   }) async {
     final controller = TextEditingController();
-    
+
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -550,10 +563,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           children: [
             Text(
               message,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -586,10 +596,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: AppTheme.secondaryColor,
             ),
-            child: const Text('Kargoya Ver'),
+            child: const Text(
+              'Kargoya Ver',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -603,9 +616,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Kargo takip linki açılamadı'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Kargo takip linki açılamadı'),
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -632,19 +645,19 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 20,
-            color: Colors.black87,
+            color: AppTheme.textPrimary,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Sipariş Detayı',
           style: TextStyle(
-            color: Colors.black87,
-            fontSize: 16,
+            color: AppTheme.textPrimary,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -684,7 +697,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     left: 16,
                     right: 16,
                     top: 16,
-                    bottom: (viewModel.orderDetail!.isConfirmable ||
+                    bottom:
+                        (viewModel.orderDetail!.isConfirmable ||
                             viewModel.orderDetail!.isCancelable)
                         ? 100
                         : 32,
@@ -704,7 +718,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         _buildAgreementSection(viewModel.orderDetail!),
                       const SizedBox(height: 36),
                     ],
-
                   ),
                 ),
               ),
@@ -732,32 +745,35 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                           if (viewModel.orderDetail!.isCancelable)
                             Expanded(
                               child: SizedBox(
-                                height: 53,
+                                height: 48,
                                 child: OutlinedButton(
                                   onPressed: viewModel.isCanceling
                                       ? null
                                       : _cancelOrder,
                                   style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.red,
-                                    side: const BorderSide(color: Colors.red),
+                                    foregroundColor: AppTheme.errorColor,
+                                    side: BorderSide(
+                                      color: AppTheme.errorColor,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                   child: viewModel.isCanceling
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
+                                      ? SizedBox(
+                                          width: 18,
+                                          height: 18,
                                           child: CircularProgressIndicator(
-                                            color: Colors.red,
+                                            color: AppTheme.errorColor,
                                             strokeWidth: 2,
                                           ),
                                         )
-                                      : const Text(
+                                      : Text(
                                           'İptal Et',
                                           style: TextStyle(
-                                            fontSize: 15,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w600,
+                                            color: AppTheme.errorColor,
                                           ),
                                         ),
                                 ),
@@ -765,37 +781,38 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                             ),
                           if (viewModel.orderDetail!.isCancelable &&
                               viewModel.orderDetail!.isConfirmable)
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                           if (viewModel.orderDetail!.isConfirmable)
                             Expanded(
                               child: SizedBox(
-                                height: 53,
+                                height: 48,
                                 child: ElevatedButton(
                                   onPressed: viewModel.isConfirming
                                       ? null
                                       : _confirmOrder,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppTheme.primaryColor,
-                                    foregroundColor: Colors.white,
+                                    foregroundColor: AppTheme.secondaryColor,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     elevation: 0,
                                   ),
                                   child: viewModel.isConfirming
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
+                                      ? SizedBox(
+                                          width: 18,
+                                          height: 18,
                                           child: CircularProgressIndicator(
-                                            color: Colors.white,
+                                            color: AppTheme.secondaryColor,
                                             strokeWidth: 2,
                                           ),
                                         )
-                                      : const Text(
+                                      : Text(
                                           'Onayla ve İşleme Al',
                                           style: TextStyle(
-                                            fontSize: 15,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w600,
+                                            color: AppTheme.secondaryColor,
                                           ),
                                         ),
                                 ),
@@ -820,20 +837,24 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: Colors.red[300]),
-            const SizedBox(height: 16),
+            Icon(
+              Icons.error_outline_rounded,
+              size: 40,
+              color: AppTheme.errorColor.withOpacity(0.7),
+            ),
+            const SizedBox(height: 12),
             Text(
               'Bir hata oluştu',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
+                color: AppTheme.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               errorMessage,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -859,13 +880,17 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[300]),
-          const SizedBox(height: 16),
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 48,
+            color: AppTheme.textSecondary.withOpacity(0.5),
+          ),
+          const SizedBox(height: 12),
           Text(
             'Sipariş bulunamadı',
             style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
+              fontSize: 14,
+              color: AppTheme.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -900,10 +925,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   Widget _buildOrderHeader(OrderDetailData order) {
     final isCanceled = order.isCanceled;
     final statusText = isCanceled ? 'İptal Edildi' : order.orderStatusName;
-    
+
     // İlk ürünün tracking numarasını al
-    final trackingNo = order.products.isNotEmpty 
-        ? order.products.first.trackingNumber 
+    final trackingNo = order.products.isNotEmpty
+        ? order.products.first.trackingNumber
         : '';
 
     return _buildSectionContainer(
@@ -921,10 +946,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       children: [
                         Text(
                           'Sipariş #${order.orderCode}',
-                          style: const TextStyle(
-                            fontSize: 16,
+                          style: TextStyle(
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: AppTheme.textPrimary,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -933,8 +958,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                               _copyToClipboard(order.orderCode, 'Sipariş kodu'),
                           child: Icon(
                             Icons.copy_rounded,
-                            size: 16,
-                            color: Colors.grey[400],
+                            size: 14,
+                            color: AppTheme.textSecondary,
                           ),
                         ),
                       ],
@@ -942,7 +967,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     const SizedBox(height: 4),
                     Text(
                       order.orderDate,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -954,7 +982,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 ),
                 child: Text(
                   statusText,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -967,8 +999,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             Consumer<OrderViewModel>(
               builder: (context, viewModel, child) {
                 return InkWell(
-                  onTap: viewModel.isCreatingLabel 
-                      ? null 
+                  onTap: viewModel.isCreatingLabel
+                      ? null
                       : () => _createLabel(trackingNo),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -995,7 +1027,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                               Text(
                                 'Kargo Etiketi Oluştur',
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.blue[700],
                                 ),
@@ -1003,7 +1035,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                               Text(
                                 'Takip No: $trackingNo',
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   color: Colors.blue[600],
                                 ),
                               ),
@@ -1042,9 +1074,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             Consumer<OrderViewModel>(
               builder: (context, viewModel, child) {
                 return InkWell(
-                  onTap: viewModel.isAddingCargo 
-                      ? null 
-                      : () => _addCargoAll(),
+                  onTap: viewModel.isAddingCargo ? null : () => _addCargoAll(),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       vertical: 10,
@@ -1070,7 +1100,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                               Text(
                                 'Tümünü Kargoya Ver',
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.purple[700],
                                 ),
@@ -1078,7 +1108,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                               Text(
                                 'Tüm ürünleri tek seferde kargoya ver',
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   color: Colors.purple[600],
                                 ),
                               ),
@@ -1121,9 +1151,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           child: Text(
             'Özet Bilgiler',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.black54,
+              color: AppTheme.textSecondary,
             ),
           ),
         ),
@@ -1145,7 +1175,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 _buildSummaryRow(
                   'İndirim',
                   '-${order.orderDiscount}',
-                  valueColor: Colors.green,
+                  valueColor: AppTheme.successColor,
                 ),
                 const SizedBox(height: 12),
               ],
@@ -1154,7 +1184,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 order.orderAmount,
                 isBold: true,
                 valueColor: AppTheme.primaryColor,
-                valueSize: 18,
+                valueSize: 16,
               ),
               if (order.orderDescription.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -1172,7 +1202,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       Text(
                         'Sipariş Notu',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: Colors.amber[800],
                         ),
@@ -1181,7 +1211,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       Text(
                         order.orderDescription,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 11,
                           color: Colors.amber[900],
                         ),
                       ),
@@ -1209,17 +1239,17 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
+            fontSize: 12,
+            color: AppTheme.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
         Text(
           value,
           style: TextStyle(
-            fontSize: valueSize ?? 14,
+            fontSize: valueSize ?? 12,
             fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-            color: valueColor ?? Colors.black87,
+            color: valueColor ?? AppTheme.textPrimary,
           ),
         ),
       ],
@@ -1234,10 +1264,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             'Ürünler (${order.products.length})',
-            style: const TextStyle(
-              fontSize: 14,
+            style: TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.black54,
+              color: AppTheme.textSecondary,
             ),
           ),
         ),
@@ -1269,42 +1299,46 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 borderRadius: BorderRadius.circular(8),
                 child: Image.network(
                   product.productImage,
-                  width: 70,
-                  height: 70,
+                  width: 60,
+                  height: 60,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      width: 70,
-                      height: 70,
+                      width: 60,
+                      height: 60,
                       color: Colors.grey[100],
                       child: Icon(
                         Icons.image_not_supported_outlined,
                         color: Colors.grey[400],
+                        size: 20,
                       ),
                     );
                   },
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       product.productName,
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                        color: AppTheme.textPrimary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (product.variants.isNotEmpty) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         product.variants,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 8),
@@ -1323,15 +1357,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                           child: Text(
                             '${product.currentQuantity} Adet',
                             style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[700],
+                              fontSize: 11,
+                              color: AppTheme.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
                         Text(
                           product.totalPrice,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.primaryColor,
@@ -1349,26 +1383,34 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.info_outline_rounded, size: 16),
-              const SizedBox(width: 6),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: AppTheme.textSecondary,
+              ),
+              const SizedBox(width: 4),
               Text(
                 displayStatus,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
               ),
               if (product.cargoAmount.isNotEmpty ||
                   product.cargoCompany.isNotEmpty) ...[
                 const Spacer(),
                 Icon(
                   Icons.local_shipping_outlined,
-                  size: 16,
-                  color: Colors.grey[600],
+                  size: 14,
+                  color: AppTheme.textSecondary,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   product.cargoCompany,
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[700],
+                    fontSize: 11,
+                    color: AppTheme.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1393,26 +1435,26 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_searching_rounded,
-                      size: 16,
-                      color: Colors.grey,
+                      size: 14,
+                      color: AppTheme.textSecondary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Kargo Takip: ${product.trackingNumber}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_ios_rounded,
-                      size: 12,
-                      color: Colors.grey,
+                      size: 10,
+                      color: AppTheme.textSecondary,
                     ),
                   ],
                 ),
@@ -1424,7 +1466,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.05),
+                color: AppTheme.errorColor.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -1433,7 +1475,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   Expanded(
                     child: Text(
                       'İptal Nedeni: ${product.cancelDesc}',
-                      style: TextStyle(fontSize: 12, color: Colors.red[700]),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.errorColor,
+                      ),
                     ),
                   ),
                 ],
@@ -1446,8 +1491,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             Consumer<OrderViewModel>(
               builder: (context, viewModel, child) {
                 return InkWell(
-                  onTap: viewModel.isAddingCargo 
-                      ? null 
+                  onTap: viewModel.isAddingCargo
+                      ? null
                       : () => _addProductCargo(product),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -1463,15 +1508,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       children: [
                         Icon(
                           Icons.local_shipping_rounded,
-                          size: 16,
+                          size: 14,
                           color: Colors.purple[700],
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             'Kargoya Ver',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: Colors.purple[700],
                             ),
@@ -1479,8 +1524,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         ),
                         if (viewModel.isAddingCargo)
                           const SizedBox(
-                            width: 16,
-                            height: 16,
+                            width: 14,
+                            height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: Colors.purple,
@@ -1489,7 +1534,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         else
                           Icon(
                             Icons.arrow_forward_ios_rounded,
-                            size: 12,
+                            size: 10,
                             color: Colors.purple[600],
                           ),
                       ],
@@ -1535,35 +1580,35 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: Colors.grey[700]),
-              const SizedBox(width: 8),
+              Icon(icon, size: 18, color: AppTheme.textSecondary),
+              const SizedBox(width: 6),
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 15,
+                style: TextStyle(
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: AppTheme.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             address.addressName,
-            style: const TextStyle(
-              fontSize: 14,
+            style: TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             address.address,
             style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
+              fontSize: 11,
+              color: AppTheme.textSecondary,
               height: 1.4,
             ),
           ),
@@ -1615,20 +1660,20 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   Widget _buildInvoiceRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 2),
       child: Row(
         children: [
           Text(
             '$label: ',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 12,
+              style: TextStyle(
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppTheme.textPrimary,
               ),
             ),
           ),
@@ -1659,32 +1704,28 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               child: const Icon(
                 Icons.description_outlined,
                 color: Colors.orange,
-                size: 20,
+                size: 18,
               ),
             ),
-            const SizedBox(width: 12),
-            const Expanded(
+            const SizedBox(width: 10),
+            Expanded(
               child: Text(
                 'Mesafeli Satış Sözleşmesi',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: AppTheme.textPrimary,
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: Colors.grey,
+              size: 12,
+              color: AppTheme.textSecondary,
             ),
-
           ],
-    
         ),
-    
       ),
-   
     );
   }
 
@@ -1718,11 +1759,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Sözleşme',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
                       ),
                     ),
                     IconButton(
@@ -1741,8 +1783,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     data: agreementContent,
                     style: {
                       "body": Style(
-                        fontSize: FontSize(14),
-                        lineHeight: LineHeight(1.5),
+                        fontSize: FontSize(12),
+                        lineHeight: LineHeight(1.4),
                       ),
                     },
                   ),
@@ -1769,7 +1811,8 @@ class _CancelOrderBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<_CancelOrderBottomSheet> createState() => _CancelOrderBottomSheetState();
+  State<_CancelOrderBottomSheet> createState() =>
+      _CancelOrderBottomSheetState();
 }
 
 class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
@@ -1817,11 +1860,12 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Ürün İptal Et',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   IconButton(
@@ -1837,19 +1881,26 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                 controller: scrollController,
                 padding: const EdgeInsets.all(16),
                 itemCount: widget.products.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final product = widget.products[index];
-                  final isSelected = _selectedProducts.containsKey(product.productID);
-                  final selection = _selectedProducts[product.productID];
+                  final isSelected = _selectedProducts.containsKey(
+                    product.opID,
+                  );
+                  final selection = _selectedProducts[product.opID];
 
                   return Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.red.withOpacity(0.05) : Colors.white,
+                      color: isSelected
+                          ? AppTheme.errorColor.withOpacity(0.05)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? Colors.red.withOpacity(0.3) : Colors.grey.shade200,
+                        color: isSelected
+                            ? AppTheme.errorColor.withOpacity(0.3)
+                            : Colors.grey.shade200,
                       ),
                     ),
                     child: Column(
@@ -1860,23 +1911,26 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                           children: [
                             Checkbox(
                               value: isSelected,
-                              activeColor: Colors.red,
+                              activeColor: AppTheme.errorColor,
                               onChanged: (value) {
                                 setState(() {
                                   if (value == true) {
                                     final firstType = widget.cancelTypes.first;
-                                    _descControllers[product.productID] = TextEditingController();
-                                    _selectedProducts[product.productID] = _CancelProductSelection(
-                                      proID: product.productID,
-                                      quantity: product.currentQuantity,
-                                      maxQuantity: product.currentQuantity,
-                                      cancelType: firstType.typeID,
-                                      cancelDesc: firstType.typeName,
-                                    );
+                                    _descControllers[product.opID] =
+                                        TextEditingController();
+                                    _selectedProducts[product.opID] =
+                                        _CancelProductSelection(
+                                          opID: product.opID,
+                                          proID: product.productID,
+                                          quantity: product.currentQuantity,
+                                          maxQuantity: product.currentQuantity,
+                                          cancelType: firstType.typeID,
+                                          cancelDesc: firstType.typeName,
+                                        );
                                   } else {
-                                    _descControllers[product.productID]?.dispose();
-                                    _descControllers.remove(product.productID);
-                                    _selectedProducts.remove(product.productID);
+                                    _descControllers[product.opID]?.dispose();
+                                    _descControllers.remove(product.opID);
+                                    _selectedProducts.remove(product.opID);
                                   }
                                 });
                               },
@@ -1885,33 +1939,34 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                               borderRadius: BorderRadius.circular(8),
                               child: Image.network(
                                 product.productImage,
-                                width: 50,
-                                height: 50,
+                                width: 45,
+                                height: 45,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
-                                    width: 50,
-                                    height: 50,
+                                    width: 45,
+                                    height: 45,
                                     color: Colors.grey[100],
                                     child: Icon(
                                       Icons.image_not_supported_outlined,
                                       color: Colors.grey[400],
-                                      size: 20,
+                                      size: 18,
                                     ),
                                   );
                                 },
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     product.productName,
-                                    style: const TextStyle(
-                                      fontSize: 14,
+                                    style: TextStyle(
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w500,
+                                      color: AppTheme.textPrimary,
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -1921,17 +1976,17 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                                     Text(
                                       product.variants,
                                       style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
+                                        fontSize: 11,
+                                        color: AppTheme.textSecondary,
                                       ),
                                     ),
                                   ],
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 2),
                                   Text(
                                     'Mevcut: ${product.currentQuantity} Adet',
                                     style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[700],
+                                      fontSize: 11,
+                                      color: AppTheme.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -1946,29 +2001,34 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                           // Miktar seçimi
                           Row(
                             children: [
-                              const Text(
+                              Text(
                                 'İptal Miktarı:',
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w500,
+                                  color: AppTheme.textPrimary,
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 10),
                               Container(
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   children: [
                                     IconButton(
-                                      icon: const Icon(Icons.remove, size: 18),
+                                      icon: const Icon(Icons.remove, size: 16),
                                       onPressed: selection!.quantity > 1
                                           ? () {
                                               setState(() {
-                                                _selectedProducts[product.productID] =
-                                                    selection.copyWith(
-                                                        quantity: selection.quantity - 1);
+                                                _selectedProducts[product
+                                                    .opID] = selection.copyWith(
+                                                  quantity:
+                                                      selection.quantity - 1,
+                                                );
                                               });
                                             }
                                           : null,
@@ -1976,23 +2036,30 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                                       constraints: const BoxConstraints(),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
                                       child: Text(
                                         '${selection.quantity}',
-                                        style: const TextStyle(
-                                          fontSize: 14,
+                                        style: TextStyle(
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w600,
+                                          color: AppTheme.textPrimary,
                                         ),
                                       ),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.add, size: 18),
-                                      onPressed: selection.quantity < selection.maxQuantity
+                                      icon: const Icon(Icons.add, size: 16),
+                                      onPressed:
+                                          selection.quantity <
+                                              selection.maxQuantity
                                           ? () {
                                               setState(() {
-                                                _selectedProducts[product.productID] =
-                                                    selection.copyWith(
-                                                        quantity: selection.quantity + 1);
+                                                _selectedProducts[product
+                                                    .opID] = selection.copyWith(
+                                                  quantity:
+                                                      selection.quantity + 1,
+                                                );
                                               });
                                             }
                                           : null,
@@ -2004,16 +2071,17 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
                           // İptal nedeni
-                          const Text(
+                          Text(
                             'İptal Nedeni:',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
+                              color: AppTheme.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
@@ -2032,39 +2100,44 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                                 }).toList(),
                                 onChanged: (value) {
                                   if (value != null) {
-                                    final type = widget.cancelTypes.firstWhere((t) => t.typeID == value);
+                                    final type = widget.cancelTypes.firstWhere(
+                                      (t) => t.typeID == value,
+                                    );
                                     setState(() {
-                                      _selectedProducts[product.productID] = selection.copyWith(
-                                        cancelType: value,
-                                        cancelDesc: type.typeName,
-                                      );
+                                      _selectedProducts[product.opID] =
+                                          selection.copyWith(
+                                            cancelType: value,
+                                            cancelDesc: type.typeName,
+                                          );
                                     });
                                   }
                                 },
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
                           // Açıklama alanı
                           Text(
                             selection.cancelType == 13
                                 ? 'Açıklama (Zorunlu):'
                                 : 'Açıklama (İsteğe Bağlı):',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: selection.cancelType == 13 && selection.customDesc.trim().isEmpty
-                                  ? Colors.red
-                                  : null,
+                              color:
+                                  selection.cancelType == 13 &&
+                                      selection.customDesc.trim().isEmpty
+                                  ? AppTheme.errorColor
+                                  : AppTheme.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           TextField(
-                            controller: _descControllers[product.productID],
+                            controller: _descControllers[product.opID],
                             decoration: InputDecoration(
                               hintText: 'İptal nedenini açıklayın...',
                               hintStyle: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: Colors.grey[400],
                               ),
                               contentPadding: const EdgeInsets.symmetric(
@@ -2073,13 +2146,17 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: BorderSide(
-                                  color: selection.cancelType == 13 && selection.customDesc.trim().isEmpty
-                                      ? Colors.red.shade300
+                                  color:
+                                      selection.cancelType == 13 &&
+                                          selection.customDesc.trim().isEmpty
+                                      ? AppTheme.errorColor.withOpacity(0.5)
                                       : Colors.grey.shade300,
                                 ),
                               ),
@@ -2087,7 +2164,7 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: BorderSide(
                                   color: selection.cancelType == 13
-                                      ? Colors.red
+                                      ? AppTheme.errorColor
                                       : AppTheme.primaryColor,
                                 ),
                               ),
@@ -2095,9 +2172,8 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                             maxLines: 2,
                             onChanged: (value) {
                               setState(() {
-                                _selectedProducts[product.productID] = selection.copyWith(
-                                  customDesc: value,
-                                );
+                                _selectedProducts[product.opID] = selection
+                                    .copyWith(customDesc: value);
                               });
                             },
                           ),
@@ -2123,24 +2199,27 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
               child: SafeArea(
                 child: SizedBox(
                   width: double.infinity,
-                  height: 53,
+                  height: 48,
                   child: ElevatedButton(
                     onPressed: _selectedProducts.isEmpty || !_allSelectionsValid
                         ? null
                         : () {
                             final cancelProducts = _selectedProducts.values
-                                .map((s) => CancelProduct(
-                                      proID: s.proID,
-                                      quantity: s.quantity,
-                                      cancelType: s.cancelType,
-                                      cancelDesc: s.finalDesc,
-                                    ))
+                                .map(
+                                  (s) => CancelProduct(
+                                    opID: s.opID,
+                                    proID: s.proID,
+                                    quantity: s.quantity,
+                                    cancelType: s.cancelType,
+                                    cancelDesc: s.finalDesc,
+                                  ),
+                                )
                                 .toList();
                             Navigator.pop(context, cancelProducts);
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppTheme.errorColor,
+                      foregroundColor: AppTheme.secondaryColor,
                       disabledBackgroundColor: Colors.grey[300],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -2151,9 +2230,10 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
                       _selectedProducts.isEmpty
                           ? 'Ürün Seçin'
                           : '${_selectedProducts.length} Ürünü İptal Et',
-                      style: const TextStyle(
-                        fontSize: 15,
+                      style: TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
+                        color: AppTheme.secondaryColor,
                       ),
                     ),
                   ),
@@ -2169,6 +2249,7 @@ class _CancelOrderBottomSheetState extends State<_CancelOrderBottomSheet> {
 
 /// İptal ürün seçimi için yardımcı model
 class _CancelProductSelection {
+  final int opID;
   final int proID;
   final int quantity;
   final int maxQuantity;
@@ -2177,6 +2258,7 @@ class _CancelProductSelection {
   final String customDesc;
 
   _CancelProductSelection({
+    required this.opID,
     required this.proID,
     required this.quantity,
     required this.maxQuantity,
@@ -2186,6 +2268,7 @@ class _CancelProductSelection {
   });
 
   _CancelProductSelection copyWith({
+    int? opID,
     int? proID,
     int? quantity,
     int? maxQuantity,
@@ -2194,6 +2277,7 @@ class _CancelProductSelection {
     String? customDesc,
   }) {
     return _CancelProductSelection(
+      opID: opID ?? this.opID,
       proID: proID ?? this.proID,
       quantity: quantity ?? this.quantity,
       maxQuantity: maxQuantity ?? this.maxQuantity,
