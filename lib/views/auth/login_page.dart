@@ -144,11 +144,13 @@ class _LoginPageState extends State<LoginPage> {
                                   }
                                   // Navigate to next screen or show success
                                   if (context.mounted) {
-                                    Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(
-                                        builder: (context) => const MainNavigation(),
-                                      ),
-                                    );
+                                    Future.microtask(() {
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(
+                                          builder: (context) => const MainNavigation(),
+                                        ),
+                                      );
+                                    });
                                   }
                                 }
                               },

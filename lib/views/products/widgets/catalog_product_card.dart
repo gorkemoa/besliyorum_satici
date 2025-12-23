@@ -1,3 +1,4 @@
+import 'package:besliyorum_satici/views/products/product_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
@@ -167,7 +168,7 @@ class CatalogProductCard extends StatelessWidget {
                                   horizontal: 6,
                                   vertical: 3,
                                 ),
-                               
+
                                 child: Text(
                                   product.categories.first.catName,
                                   style: GoogleFonts.poppins(
@@ -204,15 +205,22 @@ class CatalogProductCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                       const SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       // Satışa Ekle Butonu
                       if (!product.isSelling)
                         SizedBox(
                           width: double.infinity,
                           height: 32,
                           child: ElevatedButton(
-                            onPressed: () {
-                              print("basıldı");
+                            onPressed: () async {
+                              final _ = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProductDetailPage(
+                                    productID: product.productID,
+                                  ),
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor,

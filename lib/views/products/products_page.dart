@@ -7,6 +7,7 @@ import '../../viewmodels/product_viewmodel.dart';
 import '../auth/login_page.dart';
 import 'widgets/seller_product_card.dart';
 import 'widgets/catalog_product_card.dart';
+import 'product_detail_page.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -177,103 +178,136 @@ class _ProductsPageState extends State<ProductsPage>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              floating: true,
+              floating: false,
               pinned: true,
               elevation: 0,
+              centerTitle: true,
+              toolbarHeight: 170,
               backgroundColor: Colors.white,
-              surfaceTintColor: Colors.white,
+              // DÜZELTİLDİ: Başlık buraya taşındı ve rengi koyu yapıldı
               title: Text(
                 'Ürünlerim',
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
-                ),
+                 style: TextStyle(
+            color: Colors.black87,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
               ),
               bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(170),
-                child: Column(
-                  children: [
-                    // Arama Çubuğu
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                      child: Container(
+                preferredSize: const Size.fromHeight(80),
+                child: Container(
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      // Arama Çubuğu
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryColor.withOpacity(0.08),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Ürün ara...',
+                              hintStyle: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.grey[400],
+                                fontWeight: FontWeight.w400,
+                              ),
+                              prefixIcon: Container(
+                                margin: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  Icons.search_rounded,
+                                  color: AppTheme.primaryColor,
+                                  size: 20,
+                                ),
+                              ),
+                              suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(
+                                        Icons.clear_rounded,
+                                        color: Colors.grey[400],
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _onSearch('');
+                                        setState(() {});
+                                      },
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                              ),
+                            ),
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            onSubmitted: _onSearch,
+                            onChanged: (value) => setState(() {}),
+                          ),
+                        ),
+                      ),
+
+                      // Kategori Filtresi
+                      _buildCategoryFilter(),
+                      // Tab Bar
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
                           color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey[200]!),
                         ),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Ürün ara...',
-                            hintStyle: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.grey[500],
-                            ),
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: Colors.grey[400],
-                              size: 22,
-                            ),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: Icon(
-                                      Icons.clear,
-                                      color: Colors.grey[400],
-                                      size: 20,
-                                    ),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      _onSearch('');
-                                      setState(() {});
-                                    },
-                                  )
-                                : null,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 14,
-                            ),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicator: BoxDecoration(
+                            color: AppTheme.primaryColor,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          style: GoogleFonts.poppins(fontSize: 14),
-                          onSubmitted: _onSearch,
-                          onChanged: (value) => setState(() {}),
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          dividerColor: Colors.transparent,
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.grey[600],
+                          labelStyle: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          unselectedLabelStyle: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          tabs: const [
+                            Tab(height: 40, text: 'Ürünlerim'),
+                            Tab(height: 40, text: 'Katalog'),
+                          ],
                         ),
                       ),
-                    ),
-
-                    // Kategori Filtresi
-                    _buildCategoryFilter(),
-
-                    // Tab Bar
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          bottom: BorderSide(color: Colors.grey[200]!),
-                        ),
-                      ),
-                      child: TabBar(
-                        controller: _tabController,
-                        indicatorColor: AppTheme.primaryColor,
-                        indicatorWeight: 3,
-                        labelColor: AppTheme.primaryColor,
-                        unselectedLabelColor: Colors.grey[600],
-                        labelStyle: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        unselectedLabelStyle: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        tabs: const [
-                          Tab(text: 'Ürünlerim'),
-                          Tab(text: 'Katalog'),
-                        ],
-                      ),
-                    ),
-                  ],
+                      const SizedBox(height: 1),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -292,7 +326,7 @@ class _ProductsPageState extends State<ProductsPage>
       builder: (context, viewModel, child) {
         if (viewModel.isCategoriesLoading && viewModel.categories.isEmpty) {
           return const SizedBox(
-            height: 40,
+            height: 48,
             child: Center(
               child: SizedBox(
                 width: 20,
@@ -306,8 +340,8 @@ class _ProductsPageState extends State<ProductsPage>
         if (viewModel.categories.isEmpty) return const SizedBox.shrink();
 
         return Container(
-          height: 40,
-          margin: const EdgeInsets.only(bottom: 12),
+          height:40,
+          margin: const EdgeInsets.only(bottom: 15),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -327,10 +361,15 @@ class _ProductsPageState extends State<ProductsPage>
                 name: category.catName,
                 isSelected: _selectedCatID == category.catID,
               );
+  
             },
+  
           ),
+  
         );
+  
       },
+  
     );
   }
 
@@ -340,34 +379,63 @@ class _ProductsPageState extends State<ProductsPage>
     required bool isSelected,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(
-          name,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? Colors.white : Colors.grey[600],
-          ),
-        ),
-        selected: isSelected,
-        onSelected: (selected) {
-          if (selected) {
+      padding: const EdgeInsets.only(right: 10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: InkWell(
+          onTap: () {
             setState(() {
               _selectedCatID = id;
             });
             _onCategorySelected(id);
-          }
-        },
-        selectedColor: AppTheme.primaryColor,
-        backgroundColor: Colors.white,
-        checkmarkColor: Colors.white,
-        showCheckmark: false,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isSelected ? AppTheme.primaryColor : Colors.grey[300]!,
+          },
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? LinearGradient(
+                      colors: [
+                        AppTheme.primaryColor,
+                        AppTheme.primaryColor.withOpacity(0.85),
+                      ],
+                    )
+                  : null,
+              color: isSelected ? null : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isSelected ? AppTheme.primaryColor : Colors.grey[300]!,
+                width: isSelected ? 0 : 1.5,
+              ),
+              boxShadow: isSelected
+                  ? [
+                     
+                    ]
+                  : [
+                     
+                    ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isSelected) ...[
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected ? Colors.white : Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -460,7 +528,21 @@ class _ProductsPageState extends State<ProductsPage>
               }
 
               final product = viewModel.sellerProducts[index];
-              return SellerProductCard(product: product);
+              return SellerProductCard(
+                product: product,
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ProductDetailPage(productID: product.productID),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    _onRefresh();
+                  }
+                },
+              );
             },
           ),
         );
@@ -528,7 +610,21 @@ class _ProductsPageState extends State<ProductsPage>
               }
 
               final product = viewModel.catalogProducts[index];
-              return CatalogProductCard(product: product);
+              return CatalogProductCard(
+                product: product,
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ProductDetailPage(productID: product.productID),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    _onRefresh();
+                  }
+                },
+              );
             },
           ),
         );

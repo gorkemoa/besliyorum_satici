@@ -78,9 +78,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
       if (mounted) {
         if (orderViewModel.confirmErrorMessage == '403_LOGOUT') {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const LoginPage()),
-          );
+          Future.microtask(() {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          });
         } else if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -166,9 +168,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
       if (mounted) {
         if (orderViewModel.cancelErrorMessage == '403_LOGOUT') {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const LoginPage()),
-          );
+          Future.microtask(() {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          });
         } else if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -238,9 +242,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
       if (mounted) {
         if (orderViewModel.createLabelErrorMessage == '403_LOGOUT') {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const LoginPage()),
-          );
+          Future.microtask(() {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          });
         } else if (success) {
           // Başarılı - etiketi göster
           _showLabelBottomSheet(orderViewModel.labelData!);
@@ -463,9 +469,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
     if (mounted) {
       if (orderViewModel.addCargoErrorMessage == '403_LOGOUT') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
+        Future.microtask(() {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        });
       } else if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -519,9 +527,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
     if (mounted) {
       if (orderViewModel.addCargoErrorMessage == '403_LOGOUT') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
+        Future.microtask(() {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        });
       } else if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -644,14 +654,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            size: 20,
-            color: AppTheme.textPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+      leading: IconButton(
+  icon: ImageIcon(
+    AssetImage('assets/Icons/geri.png'),
+    size: 20,
+    color: AppTheme.textPrimary,
+  ),
+  onPressed: () => Navigator.of(context).pop(),
+),
+
         centerTitle: true,
         title: Text(
           'Sipariş Detayı',

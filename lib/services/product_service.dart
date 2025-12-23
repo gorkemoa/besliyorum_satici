@@ -3,6 +3,8 @@ import 'package:logger/logger.dart';
 
 import 'package:besliyorum_satici/models/products/product_model.dart';
 import 'package:besliyorum_satici/models/products/category_model.dart';
+import 'package:besliyorum_satici/models/products/product_detail_model.dart';
+import 'package:besliyorum_satici/models/products/sell_product_model.dart';
 import '../core/constants/app_constants.dart';
 import 'api_service.dart';
 
@@ -22,7 +24,8 @@ class ProductService {
     int? catID,
   }) async {
     try {
-      String endpoint = '${Endpoints.sellerProducts}?userToken=$userToken&page=$page';
+      String endpoint =
+          '${Endpoints.sellerProducts}?userToken=$userToken&page=$page';
 
       if (search != null && search.isNotEmpty) {
         endpoint += '&search=$search';
@@ -72,7 +75,8 @@ class ProductService {
     int? catID,
   }) async {
     try {
-      String endpoint = '${Endpoints.catalogProducts}?userToken=$userToken&page=$page';
+      String endpoint =
+          '${Endpoints.catalogProducts}?userToken=$userToken&page=$page';
 
       if (search != null && search.isNotEmpty) {
         endpoint += '&search=$search';
@@ -114,11 +118,71 @@ class ProductService {
   /// Ürün kategorilerini getirir
   Future<CategoryResponseModel> getCategories(String userToken) async {
     try {
-      final response = await _apiService.get('${Endpoints.categories}?userToken=$userToken');
+      final response = await _apiService.get(
+        '${Endpoints.categories}?userToken=$userToken',
+      );
       final Map<String, dynamic> responseData = jsonDecode(response.body);
       return CategoryResponseModel.fromJson(responseData);
     } catch (e) {
       _logger.e('Error fetching categories', error: e);
+      rethrow;
+    }
+  }
+
+  /// Ürün detayını getirir
+  /// [userToken] - Kullanıcı token'ı
+  /// [productID] - Ürün ID'si
+  Future<ProductDetailResponseModel> getProductDetail(
+    String userToken,
+    int productID,
+  ) async {
+    try {
+      final response = await _apiService.get(
+        '${Endpoints.productDetail}?userToken=$userToken&productID=$productID',
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return ProductDetailResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error fetching product detail', error: e);
+      rethrow;
+    }
+  }
+
+  /// Ürünü satışa ekler
+  /// [request] - SellProductRequestModel (userToken, productID, variants)
+  Future<SellProductResponseModel> sellProduct(
+    SellProductRequestModel request,
+  ) async {
+    try {
+      final response = await _apiService.post(
+        Endpoints.sellProduct,
+        body: request.toJson(),
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return SellProductResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error selling product', error: e);
+      rethrow;
+    }
+  }
+
+  /// Satıştaki ürünü günceller
+  /// [request] - UpdateSellProductRequestModel (userToken, productID, variants with isPublished, isRemove)
+  Future<SellProductResponseModel> updateSellProduct(
+    UpdateSellProductRequestModel request,
+  ) async {
+    try {
+      final response = await _apiService.put(
+        Endpoints.sellUpdateProduct,
+        body: request.toJson(),
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return SellProductResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error updating sell product', error: e);
       rethrow;
     }
   }

@@ -40,4 +40,7 @@ class Endpoints {
   static const String sellerProducts = 'service/user/account/products/sellerProducts';
   static const String catalogProducts = 'service/user/account/products/catalogProducts';
   static const String categories = 'service/user/account/products/categories';
+  static const String productDetail = 'service/user/account/products/productDetail';
+  static const String sellProduct = 'service/user/account/products/sellProduct';
+  static const String sellUpdateProduct = 'service/user/account/products/sellUpdateProduct';
 }
