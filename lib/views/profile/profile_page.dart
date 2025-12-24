@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/components/app_dialog.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../auth/login_page.dart';
+import 'settings_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -40,22 +40,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _showLogoutDialog() {
-    AppDialog.show(
-      context: context,
-      title: 'Çıkış Yap',
-      content: 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
-      type: AppDialogType.confirmation,
-      confirmText: 'Çıkış Yap',
-      cancelText: 'Vazgeç',
-      onConfirm: () async {
-        Navigator.of(context).pop(); // Dialog'u kapat
-        await _logout();
-      },
-      onCancel: () => Navigator.of(context).pop(),
-    );
-  }
-
   Future<void> _logout() async {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     await authViewModel.logout();
@@ -87,6 +71,20 @@ class _ProfilePageState extends State<ProfilePage> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: Colors.white),
+            onPressed: () async {
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+              // Eğer ayarlardan veri güncellenmiş olarak dönüldüyse, profil verilerini yenile
+              if (result == true && mounted) {
+                _loadUserData();
+              }
+            },
+          ),
+        ],
       ),
       body: Consumer<ProfileViewModel>(
         builder: (context, profileViewModel, child) {
@@ -158,7 +156,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Column(
                       children: [
                         const SizedBox(height: 20),
-                        // Profil Fotoğrafı
+                        // Profil Fotoğrafı veya Mağaza Logosu
                         Container(
                           width: 100,
                           height: 100,
@@ -174,17 +172,44 @@ class _ProfilePageState extends State<ProfilePage> {
                                     fit: BoxFit.cover,
                                     errorBuilder:
                                         (context, error, stackTrace) =>
-                                            const Icon(
-                                              Icons.person,
-                                              size: 60,
-                                              color: AppTheme.primaryColor,
-                                            ),
+                                            userData.storeLogo.isNotEmpty
+                                                ? Image.network(
+                                                    userData.storeLogo,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (context,
+                                                            error,
+                                                            stackTrace) =>
+                                                        const Icon(
+                                                          Icons.store,
+                                                          size: 60,
+                                                          color: AppTheme
+                                                              .primaryColor,
+                                                        ),
+                                                  )
+                                                : const Icon(
+                                                    Icons.store,
+                                                    size: 60,
+                                                    color: AppTheme
+                                                        .primaryColor,
+                                                  ),
                                   )
-                                : const Icon(
-                                    Icons.person,
-                                    size: 60,
-                                    color: AppTheme.primaryColor,
-                                  ),
+                                : userData.storeLogo.isNotEmpty
+                                    ? Image.network(
+                                        userData.storeLogo,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                                  Icons.store,
+                                                  size: 60,
+                                                  color: AppTheme.primaryColor,
+                                                ),
+                                      )
+                                    : const Icon(
+                                        Icons.store,
+                                        size: 60,
+                                        color: AppTheme.primaryColor,
+                                      ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -322,35 +347,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
 
                   const SizedBox(height: 30),
-
-                  // Çıkış Yap Butonu
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _showLogoutDialog,
-                        icon: const Icon(Icons.logout, color: Colors.white),
-                        label: Text(
-                          'Çıkış Yap',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
                 ],
               ),
             ),
@@ -381,13 +377,9 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       child: Row(
         children: [
-          Container(
+          SizedBox(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
             child: Icon(icon, color: AppTheme.primaryColor, size: 24),
           ),
           const SizedBox(width: 16),

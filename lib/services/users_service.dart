@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:logger/logger.dart';
 
 import 'package:besliyorum_satici/models/home/home_model.dart';
+import 'package:besliyorum_satici/models/auth/update_user_model.dart';
+import '../core/constants/app_constants.dart';
 import 'api_service.dart';
 import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -12,12 +14,6 @@ class UsersService {
 
   Future<HomeResponseModel> getUserAccount(int userId, String userToken) async {
     try {
-      // The endpoint defined in the request is 'service/user/account/id/{userid}'
-      // assuming Endpoints in app_constants might not have this yet, or I should construct it.
-      // Re-checking app_constants might be useful, but for now I will hardcode or assume flexible endpoint.
-      // Wait, I should check existing Endpoints. For now I will build the URL manually if needed or add to Endpoints later.
-      // Detailed check on request: GetUser {{API_URL}}service/user/account/id/{userid}
-
       final String endpoint = 'service/user/account/id/$userId';
 
       final packageInfo = await PackageInfo.fromPlatform();
@@ -36,6 +32,21 @@ class UsersService {
       return HomeResponseModel.fromJson(responseData);
     } catch (e) {
       _logger.e('Error fetching user account', error: e);
+      rethrow;
+    }
+  }
+
+  Future<UpdateUserResponseModel> updateUser(UpdateUserRequestModel request) async {
+    try {
+      final response = await _apiService.put(
+        Endpoints.updateUser,
+        body: request.toJson(),
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return UpdateUserResponseModel.fromJson(responseData);
+    } catch (e) {
+      _logger.e('Error updating user', error: e);
       rethrow;
     }
   }

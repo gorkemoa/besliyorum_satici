@@ -46,4 +46,7 @@ class Endpoints {
 
   // Payment Endpoints
   static const String paymentList = 'service/user/account/payments/list';
+
+  // User Endpoints
+  static const String updateUser = 'service/user/account/update';
 }
