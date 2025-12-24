@@ -1,4 +1,6 @@
+import 'package:besliyorum_satici/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/payment_viewmodel.dart';
@@ -21,8 +23,10 @@ class _PaymentsPageState extends State<PaymentsPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-    final paymentViewModel =
-        Provider.of<PaymentViewModel>(context, listen: false);
+    final paymentViewModel = Provider.of<PaymentViewModel>(
+      context,
+      listen: false,
+    );
     paymentViewModel.resetState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -38,8 +42,10 @@ class _PaymentsPageState extends State<PaymentsPage>
 
   void _loadPayments() {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    final paymentViewModel =
-        Provider.of<PaymentViewModel>(context, listen: false);
+    final paymentViewModel = Provider.of<PaymentViewModel>(
+      context,
+      listen: false,
+    );
 
     final token = authViewModel.loginResponse?.data?.token;
 
@@ -51,83 +57,144 @@ class _PaymentsPageState extends State<PaymentsPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
-        title: const Text('Ödemeler'),
+        backgroundColor: AppTheme.primaryColor,
+        elevation: 0,
         centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Theme.of(context).primaryColor,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Theme.of(context).primaryColor,
-          tabs: const [
-            Tab(text: 'Bekleyen Ödemeler'),
-            Tab(text: 'Geçmiş Ödemeler'),
-          ],
+        title: Text(
+          'Ödemeler',
+          style: GoogleFonts.poppins(
+            color: AppTheme.secondaryColor,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
+        iconTheme: const IconThemeData(color: AppTheme.secondaryColor),
       ),
-      body: Consumer<PaymentViewModel>(
-        builder: (context, viewModel, child) {
-          // 403 hatası kontrolü
-          if (viewModel.errorMessage == '403_LOGOUT') {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-                (route) => false,
-              );
-            });
-            return const SizedBox.shrink();
-          }
-
-          if (viewModel.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          if (viewModel.errorMessage != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    viewModel.errorMessage!,
-                    style: TextStyle(color: Colors.grey[600]),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadPayments,
-                    child: const Text('Tekrar Dene'),
-                  ),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            color: AppTheme.primaryColor,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Container(
+              height: 48,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                labelColor: Colors.white,
+                unselectedLabelColor: AppTheme.textSecondary,
+                labelStyle: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: const [
+                  Tab(text: 'Bekleyen'),
+                  Tab(text: 'Geçmiş'),
                 ],
               ),
-            );
-          }
+            ),
+          ),
+          Expanded(
+            child: Consumer<PaymentViewModel>(
+              builder: (context, viewModel, child) {
+                if (viewModel.errorMessage == '403_LOGOUT') {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
+                      (route) => false,
+                    );
+                  });
+                  return const SizedBox.shrink();
+                }
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              // Bekleyen (Gelecek) Ödemeler
-              _buildPaymentList(
-                payments: viewModel.futurePayments,
-                totalAmount: viewModel.futurePaymentsTotalAmount,
-                totalItems: viewModel.futurePaymentsTotalItems,
-                emptyMessage: 'Bekleyen ödemeniz bulunmamaktadır.',
-                isFuture: true,
+                if (viewModel.isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: AppTheme.primaryColor,
+                    ),
+                  );
+                }
+
+                if (viewModel.errorMessage != null) {
+                  return _buildErrorState(viewModel.errorMessage!);
+                }
+
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildPaymentList(
+                      payments: viewModel.futurePayments,
+                      totalAmount: viewModel.futurePaymentsTotalAmount,
+                      totalItems: viewModel.futurePaymentsTotalItems,
+                      emptyMessage: 'Bekleyen ödeme bulunmuyor.',
+                      isFuture: true,
+                    ),
+                    _buildPaymentList(
+                      payments: viewModel.pastPayments,
+                      totalAmount: viewModel.pastPaymentsTotalAmount,
+                      totalItems: viewModel.pastPaymentsTotalItems,
+                      emptyMessage: 'Geçmiş ödeme bulunmuyor.',
+                      isFuture: false,
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 32, color: AppTheme.errorColor),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
               ),
-              // Geçmiş Ödemeler
-              _buildPaymentList(
-                payments: viewModel.pastPayments,
-                totalAmount: viewModel.pastPaymentsTotalAmount,
-                totalItems: viewModel.pastPaymentsTotalItems,
-                emptyMessage: 'Geçmiş ödemeniz bulunmamaktadır.',
-                isFuture: false,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: _loadPayments,
+              child: Text(
+                'Tekrar Dene',
+                style: GoogleFonts.poppins(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -139,102 +206,99 @@ class _PaymentsPageState extends State<PaymentsPage>
     required String emptyMessage,
     required bool isFuture,
   }) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        _loadPayments();
-      },
-      child: Column(
-        children: [
-          // Özet kartı
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isFuture
-                  ? Colors.orange.withOpacity(0.1)
-                  : Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isFuture
-                    ? Colors.orange.withOpacity(0.3)
-                    : Colors.green.withOpacity(0.3),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isFuture ? 'Toplam Bekleyen' : 'Toplam Ödenen',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
+                      isFuture ? 'TOPLAM BEKLEYEN' : 'TOPLAM ÖDENEN',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       totalAmount,
-                      style: TextStyle(
-                        fontSize: 24,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: isFuture ? Colors.orange[700] : Colors.green[700],
+                        color: AppTheme.textPrimary,
                       ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isFuture ? Colors.orange : Colors.green,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '$totalItems Ödeme',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      (isFuture ? AppTheme.primaryColor : AppTheme.successColor)
+                          .withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '$totalItems Adet',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isFuture
+                        ? AppTheme.primaryColor
+                        : AppTheme.successColor,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          // Ödeme listesi
-          Expanded(
-            child: payments.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.payment_outlined,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          emptyMessage,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        Expanded(
+          child: payments.isEmpty
+              ? _buildEmptyState(emptyMessage)
+              : RefreshIndicator(
+                  color: AppTheme.primaryColor,
+                  onRefresh: () async => _loadPayments(),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(12),
                     itemCount: payments.length,
-                    itemBuilder: (context, index) {
-                      final payment = payments[index];
-                      return _buildPaymentCard(payment);
-                    },
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 8),
+                    itemBuilder: (context, index) =>
+                        _buildPaymentCard(payments[index]),
                   ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.inbox_outlined, size: 32, color: Colors.grey[300]),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: AppTheme.textSecondary,
+            ),
           ),
         ],
       ),
@@ -242,121 +306,75 @@ class _PaymentsPageState extends State<PaymentsPage>
   }
 
   Widget _buildPaymentCard(Payment payment) {
+    final isPaid = payment.isPaid;
+    final statusColor = isPaid ? AppTheme.successColor : AppTheme.primaryColor;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              isPaid ? Icons.check_circle_outline : Icons.access_time,
+              color: statusColor,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: payment.isPaid
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        payment.isPaid
-                            ? Icons.check_circle_outline
-                            : Icons.schedule,
-                        color: payment.isPaid ? Colors.green : Colors.orange,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Sipariş #${payment.orderID}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          payment.payDate,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                Text(
+                  'Sipariş #${payment.orderID}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      payment.payAmount,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: payment.isPaid ? Colors.green : Colors.orange[700],
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'Komisyon: ${payment.commissionRate}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  payment.payDate,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: payment.isPaid
-                    ? Colors.green.withOpacity(0.1)
-                    : Colors.orange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                payment.isPaid ? 'Ödendi' : 'Beklemede',
-                style: TextStyle(
-                  color: payment.isPaid ? Colors.green[700] : Colors.orange[700],
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                payment.payAmount,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
                 ),
               ),
-            ),
-          ],
-        ),
+              Text(
+                'Komisyon: ${payment.commissionRate}',
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

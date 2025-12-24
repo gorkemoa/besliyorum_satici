@@ -489,14 +489,14 @@ class _OrdersPageState extends State<OrdersPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppTheme.primaryColor,
         elevation: 0,
          
         centerTitle: true,
         title: const Text(
           'Siparişlerim',
           style: TextStyle(
-            color: Colors.black87,
+            color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -510,8 +510,8 @@ class _OrdersPageState extends State<OrdersPage> {
                     icon: Icon(
                       Icons.filter_list_rounded,
                       color: viewModel.hasActiveFilters
-                          ? AppTheme.primaryColor
-                          : Colors.grey,
+                          ? Colors.white
+                          : Colors.white,
                     ),
                     onPressed: _showFilterBottomSheet,
                   ),

@@ -183,12 +183,12 @@ class _ProductsPageState extends State<ProductsPage>
               elevation: 0,
               centerTitle: true,
               toolbarHeight: 170,
-              backgroundColor: Colors.white,
+              backgroundColor: AppTheme.primaryColor,
               // DÜZELTİLDİ: Başlık buraya taşındı ve rengi koyu yapıldı
               title: Text(
                 'Ürünlerim',
                  style: TextStyle(
-            color: Colors.black87,
+            color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
