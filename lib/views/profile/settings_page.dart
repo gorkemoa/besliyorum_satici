@@ -10,6 +10,7 @@ import 'settings/privacy_settings_page.dart';
 import 'settings/help_support_page.dart';
 import 'settings/about_page.dart';
 import 'settings/documents_list_page.dart';
+import 'settings/addresses_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -85,7 +86,17 @@ class SettingsPage extends StatelessWidget {
             },
           ),
 
-
+          _buildSettingsTile(
+            context: context,
+            icon: Icons.location_on_outlined,
+            title: 'Adreslerim',
+            subtitle: 'Fatura, sevkiyat ve iade adresleriniz',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const AddressesPage()),
+              );
+            },
+          ),
 
           _buildSettingsTile(
             context: context,
@@ -138,9 +149,7 @@ class SettingsPage extends StatelessWidget {
             subtitle: 'Uygulama bilgileri ve sürüm',
             onTap: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AboutPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const AboutPage()),
               );
             },
           ),
@@ -177,11 +186,7 @@ class SettingsPage extends StatelessWidget {
                   color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
-                  Icons.logout,
-                  color: Colors.red,
-                  size: 24,
-                ),
+                child: const Icon(Icons.logout, color: Colors.red, size: 24),
               ),
               title: Text(
                 'Çıkış Yap',
@@ -244,10 +249,7 @@ class SettingsPage extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
           width: 44,
           height: 44,
@@ -255,11 +257,7 @@ class SettingsPage extends StatelessWidget {
             color: AppTheme.primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            color: AppTheme.primaryColor,
-            size: 24,
-          ),
+          child: Icon(icon, color: AppTheme.primaryColor, size: 24),
         ),
         title: Text(
           title,
@@ -271,10 +269,7 @@ class SettingsPage extends StatelessWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            color: Colors.grey[600],
-          ),
+          style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
