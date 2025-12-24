@@ -36,56 +36,45 @@ class _AddressesPageState extends State<AddressesPage> {
   }
 
   Future<void> _navigateToAddAddress() async {
-    final result = await Navigator.of(context).push<bool>(
+    await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (context) => const AddressFormPage()),
     );
-    if (result == true) {
-      // Address was added, list will be refreshed by AddressFormPage
-    }
   }
 
   Future<void> _navigateToEditAddress(AddressModel address) async {
-    final result = await Navigator.of(context).push<bool>(
+    await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) => AddressFormPage(existingAddress: address),
       ),
     );
-    if (result == true) {
-      // Address was updated, list will be refreshed by AddressFormPage
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor:AppTheme.primaryColor,
         elevation: 0,
         leading: IconButton(
-          icon: Image.asset(
-            'assets/Icons/geri.png',
-            width: 25,
-            height: 25,
-            fit: BoxFit.contain,
-            color: Colors.grey,
-          ),
+          icon: Image.asset('assets/Icons/geri.png', width: 24, height: 24),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
         title: const Text(
           'Adreslerim',
           style: TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
+            color: Colors.white,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddAddress,
-        backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: AppTheme.textPrimary, size: 26),
+            onPressed: _navigateToAddAddress,
+          ),
+        ],
       ),
       body: Consumer<AddressViewModel>(
         builder: (context, viewModel, child) {
@@ -96,135 +85,22 @@ class _AddressesPageState extends State<AddressesPage> {
           }
 
           if (viewModel.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      size: 80,
-                      color: Colors.grey[300],
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      viewModel.errorMessage ?? 'Bir hata oluştu',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _loadAddresses,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Tekrar Dene'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return _buildErrorState(viewModel.errorMessage);
           }
 
           if (!viewModel.hasData) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.location_off_outlined,
-                      size: 80,
-                      color: Colors.grey[300],
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Henüz adres kaydınız bulunmuyor',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          // Group addresses by type
-          final addressTypes = <String>[];
-          for (var address in viewModel.addresses) {
-            if (!addressTypes.contains(address.addressType)) {
-              addressTypes.add(address.addressType);
-            }
+            return _buildEmptyState();
           }
 
           return RefreshIndicator(
             onRefresh: _loadAddresses,
             color: AppTheme.primaryColor,
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              itemCount: addressTypes.length,
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: viewModel.addresses.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final type = addressTypes[index];
-                final addressesOfType = viewModel.getAddressesByType(type);
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (index > 0) const SizedBox(height: 24),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        '$type Adresi',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: addressesOfType.asMap().entries.map((entry) {
-                          final idx = entry.key;
-                          final address = entry.value;
-                          return Column(
-                            children: [
-                              _buildAddressItem(address),
-                              if (idx < addressesOfType.length - 1)
-                                Divider(
-                                  height: 1,
-                                  thickness: 1,
-                                  color: Colors.grey[200],
-                                  indent: 16,
-                                  endIndent: 16,
-                                ),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                );
+                return _buildAddressCard(viewModel.addresses[index]);
               },
             ),
           );
@@ -233,86 +109,26 @@ class _AddressesPageState extends State<AddressesPage> {
     );
   }
 
-  Widget _buildAddressItem(AddressModel address) {
-    return InkWell(
-      onTap: () => _navigateToEditAddress(address),
-      borderRadius: BorderRadius.circular(12),
+  Widget _buildErrorState(String? message) {
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.all(32),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Header with city/district and badge
-            Row(
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 20,
-                        color: _getTypeColor(address.addressType),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '${address.cityName} / ${address.districtName}',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (address.isDefault)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.successColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check_circle,
-                          size: 12,
-                          color: AppTheme.successColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Varsayılan',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.successColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(width: 8),
-                Icon(Icons.edit_outlined, size: 18, color: Colors.grey[400]),
-              ],
+            Icon(Icons.error_outline, size: 56, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              message ?? 'Bir hata oluştu',
+              style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 10),
-
-            // Address text
-            Padding(
-              padding: const EdgeInsets.only(left: 28),
-              child: Text(
-                address.address,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[700],
-                  height: 1.4,
-                ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: _loadAddresses,
+              child: const Text(
+                'Tekrar Dene',
+                style: TextStyle(color: AppTheme.primaryColor),
               ),
             ),
           ],
@@ -321,16 +137,133 @@ class _AddressesPageState extends State<AddressesPage> {
     );
   }
 
-  Color _getTypeColor(String type) {
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.location_off_outlined, size: 56, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              'Henüz adres eklemediniz',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Yeni adres eklemek için + butonuna tıklayın',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddressCard(AddressModel address) {
+    return InkWell(
+      onTap: () => _navigateToEditAddress(address),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              children: [
+                _buildTypeBadge(address.addressType),
+                const Spacer(),
+                if (address.isDefault)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.successColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'Varsayılan',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.successColor,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Location
+            Text(
+              '${address.cityName} / ${address.districtName}',
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 6),
+
+            // Address detail
+            Text(
+              address.address,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.4,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeBadge(String type) {
+    Color badgeColor;
     switch (type) {
       case 'Fatura':
-        return const Color(0xFF2196F3); // Blue
+        badgeColor = const Color(0xFF2196F3);
+        break;
       case 'Sevkiyat':
-        return const Color(0xFFFF9800); // Orange
+        badgeColor = const Color(0xFFFF9800);
+        break;
       case 'İade':
-        return const Color(0xFF9C27B0); // Purple
+        badgeColor = const Color(0xFF9C27B0);
+        break;
       default:
-        return AppTheme.primaryColor;
+        badgeColor = AppTheme.primaryColor;
     }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: badgeColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        type,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: badgeColor,
+        ),
+      ),
+    );
   }
 }

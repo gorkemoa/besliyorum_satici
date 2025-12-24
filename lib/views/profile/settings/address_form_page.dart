@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -21,6 +22,7 @@ class AddressFormPage extends StatefulWidget {
 class _AddressFormPageState extends State<AddressFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _addressController = TextEditingController();
+  bool _isInitializing = true;
 
   bool get isEditing => widget.existingAddress != null;
 
@@ -38,18 +40,26 @@ class _AddressFormPageState extends State<AddressFormPage> {
       listen: false,
     );
 
-    // Clear previous selections
     addressViewModel.clearFormSelections();
 
-    // Load initial data
     await Future.wait([
       addressViewModel.fetchAddressTypes(),
       addressViewModel.fetchCities(),
     ]);
 
-    // If editing, populate form
     if (isEditing && mounted) {
-      _addressController.text = widget.existingAddress!.address;
+      final existingAddress = widget.existingAddress!;
+      _addressController.text = existingAddress.address;
+
+      addressViewModel.setAddressTypeByName(existingAddress.addressType);
+      await addressViewModel.setCityByName(existingAddress.cityName);
+      await addressViewModel.setDistrictByName(existingAddress.districtName);
+    }
+
+    if (mounted) {
+      setState(() {
+        _isInitializing = false;
+      });
     }
   }
 
@@ -74,13 +84,12 @@ class _AddressFormPageState extends State<AddressFormPage> {
       return;
     }
 
-    // Validate selections
-    if (addressViewModel.selectedAddressType == null) {
+    if (!isEditing && addressViewModel.selectedAddressType == null) {
       _showError('Lütfen adres tipini seçin');
       return;
     }
     if (addressViewModel.selectedCity == null) {
-      _showError('Lütfen şehir seçin');
+      _showError('Lütfen il seçin');
       return;
     }
     if (addressViewModel.selectedDistrict == null) {
@@ -95,7 +104,6 @@ class _AddressFormPageState extends State<AddressFormPage> {
     bool success;
 
     if (isEditing) {
-      // Update existing address
       success = await addressViewModel.updateAddress(
         userToken: token,
         addressID: widget.existingAddress!.addressID,
@@ -106,7 +114,6 @@ class _AddressFormPageState extends State<AddressFormPage> {
         address: _addressController.text.trim(),
       );
     } else {
-      // Add new address
       success = await addressViewModel.addAddress(
         userToken: token,
         addressType: addressViewModel.selectedAddressType!.typeID,
@@ -119,7 +126,6 @@ class _AddressFormPageState extends State<AddressFormPage> {
     }
 
     if (success && mounted) {
-      // Refresh address list and go back
       await addressViewModel.fetchAddresses(token);
       if (mounted) {
         Navigator.of(context).pop(true);
@@ -154,345 +160,364 @@ class _AddressFormPageState extends State<AddressFormPage> {
     );
   }
 
+  void _showCupertinoPicker<T>({
+    required String title,
+    required List<T> items,
+    required T? selectedItem,
+    required String Function(T) displayText,
+    required void Function(T) onSelected,
+  }) {
+    if (items.isEmpty) return;
+
+    int initialIndex = 0;
+    if (selectedItem != null) {
+      final index = items.indexOf(selectedItem);
+      if (index >= 0) initialIndex = index;
+    }
+
+    int currentIndex = initialIndex;
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 300,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: Text(
+                        'İptal',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: const Text(
+                        'Tamam',
+                        style: TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () {
+                        onSelected(items[currentIndex]);
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: CupertinoPicker(
+                  scrollController: FixedExtentScrollController(
+                    initialItem: initialIndex,
+                  ),
+                  itemExtent: 40,
+                  backgroundColor: Colors.white,
+                  onSelectedItemChanged: (index) {
+                    currentIndex = index;
+                  },
+                  children: items.map((item) {
+                    return Center(
+                      child: Text(
+                        displayText(item),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppTheme.primaryColor,
         elevation: 0,
         leading: IconButton(
           icon: Image.asset(
             'assets/Icons/geri.png',
-            width: 25,
-            height: 25,
-            fit: BoxFit.contain,
-            color: Colors.grey,
+            width: 24,
+            height: 24,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
         title: Text(
-          isEditing ? 'Adresi Düzenle' : 'Yeni Adres Ekle',
+          isEditing ? 'Adresi Düzenle' : 'Yeni Adres',
           style: const TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
+            color: Colors.white,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
-      body: Consumer<AddressViewModel>(
-        builder: (context, viewModel, child) {
-          return Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Address Type Dropdown (only for new address)
-                if (!isEditing) ...[
-                  _buildSectionTitle('Adres Tipi'),
-                  const SizedBox(height: 8),
-                  _buildAddressTypeDropdown(viewModel),
-                  const SizedBox(height: 20),
-                ],
+      body: _isInitializing
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryColor),
+            )
+          : Consumer<AddressViewModel>(
+              builder: (context, viewModel, child) {
+                return Form(
+                  key: _formKey,
+                  child: ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      if (!isEditing) ...[
+                        _buildPickerField(
+                          label: 'Adres Tipi',
+                          value: viewModel.selectedAddressType?.typeName,
+                          placeholder: 'Seçiniz',
+                          isLoading: viewModel.isAddressTypesLoading,
+                          onTap: () => _showCupertinoPicker<AddressTypeModel>(
+                            title: 'Adres Tipi',
+                            items: viewModel.addressTypes,
+                            selectedItem: viewModel.selectedAddressType,
+                            displayText: (item) => item.typeName,
+                            onSelected: viewModel.setSelectedAddressType,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
 
-                // City Dropdown
-                _buildSectionTitle('Şehir'),
-                const SizedBox(height: 8),
-                _buildCityDropdown(viewModel),
-                const SizedBox(height: 20),
+                      _buildPickerField(
+                        label: 'İl',
+                        value: viewModel.selectedCity?.cityName,
+                        placeholder: 'Seçiniz',
+                        isLoading: viewModel.isCitiesLoading,
+                        onTap: () => _showCupertinoPicker<CityModel>(
+                          title: 'İl Seçin',
+                          items: viewModel.cities,
+                          selectedItem: viewModel.selectedCity,
+                          displayText: (item) => item.cityName,
+                          onSelected: viewModel.setSelectedCity,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
-                // District Dropdown
-                _buildSectionTitle('İlçe'),
-                const SizedBox(height: 8),
-                _buildDistrictDropdown(viewModel),
-                const SizedBox(height: 20),
+                      _buildPickerField(
+                        label: 'İlçe',
+                        value: viewModel.selectedDistrict?.districtName,
+                        placeholder: viewModel.selectedCity == null
+                            ? 'Önce il seçin'
+                            : 'Seçiniz',
+                        isLoading: viewModel.isDistrictsLoading,
+                        isEnabled: viewModel.selectedCity != null,
+                        onTap: () => _showCupertinoPicker<DistrictModel>(
+                          title: 'İlçe Seçin',
+                          items: viewModel.districts,
+                          selectedItem: viewModel.selectedDistrict,
+                          displayText: (item) => item.districtName,
+                          onSelected: viewModel.setSelectedDistrict,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
-                // Neighborhood Dropdown
-                _buildSectionTitle('Mahalle'),
-                const SizedBox(height: 8),
-                _buildNeighborhoodDropdown(viewModel),
-                const SizedBox(height: 20),
+                      _buildPickerField(
+                        label: 'Mahalle',
+                        value:
+                            viewModel.selectedNeighborhood?.neighbourhoodName,
+                        placeholder: viewModel.selectedDistrict == null
+                            ? 'Önce ilçe seçin'
+                            : 'Seçiniz',
+                        isLoading: viewModel.isNeighborhoodsLoading,
+                        isEnabled: viewModel.selectedDistrict != null,
+                        onTap: () => _showCupertinoPicker<NeighborhoodModel>(
+                          title: 'Mahalle Seçin',
+                          items: viewModel.neighborhoods,
+                          selectedItem: viewModel.selectedNeighborhood,
+                          displayText: (item) => item.neighbourhoodName,
+                          onSelected: viewModel.setSelectedNeighborhood,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
-                // Address Text Field
-                _buildSectionTitle('Adres Detayı'),
-                const SizedBox(height: 8),
-                _buildAddressTextField(),
-                const SizedBox(height: 32),
+                      _buildLabel('Adres Detayı'),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _addressController,
+                        maxLines: 3,
+                        style: const TextStyle(fontSize: 15),
+                        decoration: InputDecoration(
+                          hintText: 'Sokak, bina no, daire no...',
+                          hintStyle: TextStyle(color: Colors.grey[400]),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          contentPadding: const EdgeInsets.all(16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Adres detayı gerekli';
+                          }
+                          if (value.trim().length < 10) {
+                            return 'En az 10 karakter girin';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 32),
 
-                // Save Button
-                _buildSaveButton(viewModel),
-              ],
+                      SizedBox(
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: viewModel.isSaving ? null : _saveAddress,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: viewModel.isSaving
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  isEditing ? 'Güncelle' : 'Kaydet',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildLabel(String text) {
     return Text(
-      title,
+      text,
       style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
         color: Colors.grey[700],
       ),
     );
   }
 
-  Widget _buildAddressTypeDropdown(AddressViewModel viewModel) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: viewModel.isAddressTypesLoading
-          ? const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-              ),
-            )
-          : DropdownButtonFormField<AddressTypeModel>(
-              value: viewModel.selectedAddressType,
-              decoration: const InputDecoration(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                border: InputBorder.none,
-                hintText: 'Adres tipi seçin',
-              ),
-              items: viewModel.addressTypes.map((type) {
-                return DropdownMenuItem<AddressTypeModel>(
-                  value: type,
-                  child: Text(type.typeName),
-                );
-              }).toList(),
-              onChanged: (value) {
-                viewModel.setSelectedAddressType(value);
-              },
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-              isExpanded: true,
+  Widget _buildPickerField({
+    required String label,
+    required String? value,
+    required String placeholder,
+    required VoidCallback onTap,
+    bool isLoading = false,
+    bool isEnabled = true,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: isEnabled && !isLoading ? onTap : null,
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: isEnabled ? Colors.grey[50] : Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!),
             ),
-    );
-  }
-
-  Widget _buildCityDropdown(AddressViewModel viewModel) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: viewModel.isCitiesLoading
-          ? const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.primaryColor,
-                  ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: isLoading
+                      ? Row(
+                          children: [
+                            SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.grey[400],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Yükleniyor...',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.grey[400],
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          value ?? placeholder,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: value != null
+                                ? Colors.black87
+                                : Colors.grey[400],
+                          ),
+                        ),
                 ),
-              ),
-            )
-          : DropdownButtonFormField<CityModel>(
-              value: viewModel.selectedCity,
-              decoration: const InputDecoration(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: isEnabled ? Colors.grey[600] : Colors.grey[400],
                 ),
-                border: InputBorder.none,
-                hintText: 'Şehir seçin',
-              ),
-              items: viewModel.cities.map((city) {
-                return DropdownMenuItem<CityModel>(
-                  value: city,
-                  child: Text(city.cityName),
-                );
-              }).toList(),
-              onChanged: (value) {
-                viewModel.setSelectedCity(value);
-              },
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-              isExpanded: true,
+              ],
             ),
-    );
-  }
-
-  Widget _buildDistrictDropdown(AddressViewModel viewModel) {
-    final isEnabled = viewModel.selectedCity != null;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isEnabled ? Colors.white : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: viewModel.isDistrictsLoading
-          ? const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-              ),
-            )
-          : DropdownButtonFormField<DistrictModel>(
-              value: viewModel.selectedDistrict,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                border: InputBorder.none,
-                hintText: isEnabled ? 'İlçe seçin' : 'Önce şehir seçin',
-              ),
-              items: viewModel.districts.map((district) {
-                return DropdownMenuItem<DistrictModel>(
-                  value: district,
-                  child: Text(district.districtName),
-                );
-              }).toList(),
-              onChanged: isEnabled
-                  ? (value) {
-                      viewModel.setSelectedDistrict(value);
-                    }
-                  : null,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-              isExpanded: true,
-            ),
-    );
-  }
-
-  Widget _buildNeighborhoodDropdown(AddressViewModel viewModel) {
-    final isEnabled = viewModel.selectedDistrict != null;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isEnabled ? Colors.white : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: viewModel.isNeighborhoodsLoading
-          ? const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-              ),
-            )
-          : DropdownButtonFormField<NeighborhoodModel>(
-              value: viewModel.selectedNeighborhood,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                border: InputBorder.none,
-                hintText: isEnabled ? 'Mahalle seçin' : 'Önce ilçe seçin',
-              ),
-              items: viewModel.neighborhoods.map((neighborhood) {
-                return DropdownMenuItem<NeighborhoodModel>(
-                  value: neighborhood,
-                  child: Text(neighborhood.neighbourhoodName),
-                );
-              }).toList(),
-              onChanged: isEnabled
-                  ? (value) {
-                      viewModel.setSelectedNeighborhood(value);
-                    }
-                  : null,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-              isExpanded: true,
-            ),
-    );
-  }
-
-  Widget _buildAddressTextField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: TextFormField(
-        controller: _addressController,
-        maxLines: 4,
-        decoration: const InputDecoration(
-          contentPadding: EdgeInsets.all(16),
-          border: InputBorder.none,
-          hintText: 'Sokak, cadde, bina no, daire no vb.',
-          hintStyle: TextStyle(color: Colors.grey),
-        ),
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) {
-            return 'Lütfen adres detayını girin';
-          }
-          if (value.trim().length < 10) {
-            return 'Adres en az 10 karakter olmalıdır';
-          }
-          return null;
-        },
-      ),
-    );
-  }
-
-  Widget _buildSaveButton(AddressViewModel viewModel) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: viewModel.isSaving ? null : _saveAddress,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryColor,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
           ),
-          elevation: 0,
         ),
-        child: viewModel.isSaving
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : Text(
-                isEditing ? 'Güncelle' : 'Kaydet',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-      ),
+      ],
     );
   }
 }

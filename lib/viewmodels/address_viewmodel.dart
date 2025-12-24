@@ -229,6 +229,49 @@ class AddressViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Finds and sets city by name, then loads districts
+  Future<void> setCityByName(String cityName) async {
+    if (_cities.isEmpty) {
+      await fetchCities();
+    }
+    final city = _cities.firstWhere(
+      (c) => c.cityName.toUpperCase() == cityName.toUpperCase(),
+      orElse: () => _cities.first,
+    );
+    _selectedCity = city;
+    notifyListeners();
+    await fetchDistricts(city.cityNO);
+  }
+
+  /// Finds and sets district by name, then loads neighborhoods
+  Future<void> setDistrictByName(String districtName) async {
+    if (_districts.isEmpty) return;
+    try {
+      final district = _districts.firstWhere(
+        (d) => d.districtName.toUpperCase() == districtName.toUpperCase(),
+      );
+      _selectedDistrict = district;
+      notifyListeners();
+      await fetchNeighborhoods(district.districtNO);
+    } catch (e) {
+      // District not found
+    }
+  }
+
+  /// Finds and sets address type by name
+  void setAddressTypeByName(String typeName) {
+    if (_addressTypes.isEmpty) return;
+    try {
+      final type = _addressTypes.firstWhere(
+        (t) => t.typeName.toUpperCase() == typeName.toUpperCase(),
+      );
+      _selectedAddressType = type;
+      notifyListeners();
+    } catch (e) {
+      // Type not found
+    }
+  }
+
   /// Adds a new address
   Future<bool> addAddress({
     required String userToken,

@@ -65,7 +65,7 @@ class AddressService {
   /// Updates an existing address
   Future<bool> updateAddress(UpdateAddressRequest request) async {
     try {
-      final response = await _apiService.post(
+      final response = await _apiService.put(
         Endpoints.addressUpdate,
         body: request.toJson(),
       );
