@@ -5,6 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:besliyorum_satici/models/home/home_model.dart';
 import 'package:besliyorum_satici/models/auth/update_user_model.dart';
 import 'package:besliyorum_satici/models/auth/update_password_model.dart';
+import 'package:besliyorum_satici/models/auth/delete_user_model.dart';
 import '../core/constants/app_constants.dart';
 import 'api_service.dart';
 import 'dart:io';
@@ -71,6 +72,28 @@ class UsersService {
     } catch (e) {
       debugPrint('🔐 [USERS_SERVICE] HATA: $e');
       _logger.d('Error updating password', error: e);
+      rethrow;
+    }
+  }
+
+  Future<DeleteUserResponseModel> deleteUser(DeleteUserRequestModel request) async {
+    try {
+      debugPrint('🗑️ [USERS_SERVICE] Hesap silme isteği gönderiliyor: ${Endpoints.deleteUser}');
+      debugPrint('🗑️ [USERS_SERVICE] Request Body: ${request.toJson()}');
+      
+      final response = await _apiService.delete(
+        Endpoints.deleteUser,
+        body: request.toJson(),
+      );
+
+      debugPrint('🗑️ [USERS_SERVICE] Response Status: ${response.statusCode}');
+      debugPrint('🗑️ [USERS_SERVICE] Response Body: ${response.body}');
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      return DeleteUserResponseModel.fromJson(responseData);
+    } catch (e) {
+      debugPrint('🗑️ [USERS_SERVICE] HATA: $e');
+      _logger.d('Error deleting user', error: e);
       rethrow;
     }
   }

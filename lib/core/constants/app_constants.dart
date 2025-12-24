@@ -50,5 +50,5 @@ class Endpoints {
 
   // User Endpoints
   static const String updateUser = 'service/user/account/update';
-  static const String updatePassword = 'service/user/account/updatePassword';
-}
+  static const String updatePassword = 'service/user/account/updatePassword'; 
+   static const String deleteUser = 'service/user/account/delete';}

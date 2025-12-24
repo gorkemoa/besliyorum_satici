@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/components/app_dialog.dart';
+import '../../../viewmodels/auth_viewmodel.dart';
+import '../../../models/auth/delete_user_model.dart';
+import '../../../services/users_service.dart';
 import 'change_password_page.dart';
+import '../../auth/login_page.dart';
 
 class PrivacySettingsPage extends StatelessWidget {
   const PrivacySettingsPage({super.key});
@@ -215,40 +221,127 @@ class PrivacySettingsPage extends StatelessWidget {
   }
 
   void _showDeleteAccountDialog(BuildContext context) {
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Hesabı Sil',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-          style: GoogleFonts.poppins(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Vazgeç',
-              style: GoogleFonts.poppins(color: Colors.grey),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Hesap silme işlemi
-            },
-            child: Text(
-              'Sil',
-              style: GoogleFonts.poppins(
-                color: Colors.red,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+      title: 'Hesabı Sil',
+      content: 'Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm verileriniz kalıcı olarak silinecektir.',
+      type: AppDialogType.confirmation,
+      confirmText: 'Devam Et',
+      cancelText: 'Vazgeç',
+      onConfirm: () {
+        Navigator.of(context).pop(); // İlk dialog'u kapat
+        _showFinalDeleteConfirmation(context); // İkinci onay dialog'unu göster
+      },
+      onCancel: () => Navigator.of(context).pop(),
     );
+  }
+
+  void _showFinalDeleteConfirmation(BuildContext context) {
+    AppDialog.show(
+      context: context,
+      title: 'Son Onay',
+      content: 'Bu işlem geri alınamaz! Hesabınızı silmek için tekrar onaylayın.',
+      type: AppDialogType.confirmation,
+      confirmText: 'Hesabı Sil',
+      cancelText: 'Vazgeç',
+      onConfirm: () async {
+        Navigator.of(context).pop(); // İkinci dialog'u kapat
+        await _deleteAccount(context);
+      },
+      onCancel: () => Navigator.of(context).pop(),
+    );
+  }
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final token = authViewModel.loginResponse?.data?.token;
+
+    if (token == null) {
+      if (context.mounted) {
+        AppDialog.show(
+          context: context,
+          title: 'Hata',
+          content: 'Oturum bilgisi bulunamadı',
+          type: AppDialogType.alert,
+          confirmText: 'Tamam',
+        );
+      }
+      return;
+    }
+
+    // Loading dialog göster
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const CircularProgressIndicator(
+              color: AppTheme.primaryColor,
+            ),
+          ),
+        ),
+      );
+    }
+
+    try {
+      final usersService = UsersService();
+      final request = DeleteUserRequestModel(userToken: token);
+      
+      debugPrint('🗑️ [PRIVACY_SETTINGS] Hesap silme işlemi başlatılıyor...');
+      final response = await usersService.deleteUser(request);
+      debugPrint('🗑️ [PRIVACY_SETTINGS] Response alındı: success=${response.success}');
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Loading dialog'u kapat
+
+        if (response.success && response.code200) {
+          // Logout yap
+          await authViewModel.logout();
+          
+          // Login sayfasına yönlendir
+          if (context.mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+              (route) => false,
+            );
+
+            // Başarı mesajı göster
+            AppDialog.show(
+              context: context,
+              title: 'Başarılı',
+              content: response.message ?? 'Hesabınız başarıyla silindi',
+              type: AppDialogType.info,
+              confirmText: 'Tamam',
+            );
+          }
+        } else {
+          AppDialog.show(
+            context: context,
+            title: 'Hata',
+            content: response.message ?? response.errorMessage ?? 'Hesap silme işlemi başarısız',
+            type: AppDialogType.alert,
+            confirmText: 'Tamam',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('🗑️ [PRIVACY_SETTINGS] HATA: $e');
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Loading dialog'u kapat
+        AppDialog.show(
+          context: context,
+          title: 'Hata',
+          content: 'Bir hata oluştu: $e',
+          type: AppDialogType.alert,
+          confirmText: 'Tamam',
+        );
+      }
+    }
   }
 }

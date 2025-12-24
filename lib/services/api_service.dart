@@ -100,4 +100,31 @@ class ApiService {
       rethrow;
     }
   }
+
+  Future<http.Response> delete(String endpoint, {dynamic body}) async {
+    final url = Uri.parse('$_baseUrl$endpoint');
+    final headers = _getHeaders();
+    final jsonBody = jsonEncode(body);
+
+    _logger.i('DELETE Request: $url\nHeaders: $headers\nBody: $jsonBody');
+
+    try {
+      final response = await http.delete(url, headers: headers, body: jsonBody);
+
+      _logger.i(
+        'DELETE Response: $url\nStatus: ${response.statusCode}\nBody: ${response.body}',
+      );
+
+      if (response.statusCode == 417 || response.statusCode == 200) {
+        return response;
+      } else {
+        throw Exception(
+          'Network Error: ${response.statusCode} ${response.reasonPhrase}',
+        );
+      }
+    } catch (e) {
+      _logger.e('DELETE Error: $url', error: e);
+      rethrow;
+    }
+  }
 }
