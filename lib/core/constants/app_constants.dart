@@ -35,6 +35,7 @@ class Endpoints {
   static const String sellerPolicy = 'service/general/general/contracts/sellerPolicy';
   static const String kvkkPolicy = 'service/general/general/contracts/kvkkPolicy';
   static const String iyzicoPolicy = 'https://www.iyzico.com/pazaryeri-satici-anlasma';
+  static const String documents = 'service/user/account/documents/list';
 
   // Product Endpoints
   static const String sellerProducts = 'service/user/account/products/sellerProducts';

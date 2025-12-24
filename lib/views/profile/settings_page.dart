@@ -10,6 +10,7 @@ import 'settings/notification_settings_page.dart';
 import 'settings/privacy_settings_page.dart';
 import 'settings/help_support_page.dart';
 import 'settings/about_page.dart';
+import 'settings/documents_list_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -125,6 +126,19 @@ class SettingsPage extends StatelessWidget {
 
           // Destek Bölümü
           _buildSectionHeader('Destek'),
+          _buildSettingsTile(
+            context: context,
+            icon: Icons.description_outlined,
+            title: 'Dökümanlar',
+            subtitle: 'Sözleşmeler ve yasal dökümanlar',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const DocumentsListPage(),
+                ),
+              );
+            },
+          ),
           _buildSettingsTile(
             context: context,
             icon: Icons.help_outline,
