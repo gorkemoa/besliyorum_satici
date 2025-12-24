@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:besliyorum_satici/views/home/home_page.dart';
 import 'package:besliyorum_satici/views/order/orders_page.dart';
 import 'package:besliyorum_satici/views/products/products_page.dart';
+import 'package:besliyorum_satici/views/payment/payments_page.dart';
 import 'package:besliyorum_satici/views/profile/profile_page.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -18,6 +19,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const HomePage(),
     const OrdersPage(),
     const ProductsPage(),
+    const PaymentsPage(),
     const ProfilePage(),
   ];
 
@@ -50,6 +52,10 @@ class _MainNavigationState extends State<MainNavigation> {
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
             label: 'Ürünler',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.payment),
+            label: 'Ödemeler',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

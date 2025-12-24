@@ -10,6 +10,7 @@ import 'package:besliyorum_satici/viewmodels/register_viewmodel.dart';
 import 'package:besliyorum_satici/viewmodels/product_viewmodel.dart';
 import 'package:besliyorum_satici/viewmodels/product_detail_viewmodel.dart';
 import 'package:besliyorum_satici/viewmodels/profile_viewmodel.dart';
+import 'package:besliyorum_satici/viewmodels/payment_viewmodel.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -61,6 +62,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProductViewModel()),
         ChangeNotifierProvider(create: (_) => ProductDetailViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        ChangeNotifierProvider(create: (_) => PaymentViewModel()),
       ],
       child: GestureDetector(
         onTap: () {

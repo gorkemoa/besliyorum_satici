@@ -43,4 +43,7 @@ class Endpoints {
   static const String productDetail = 'service/user/account/products/productDetail';
   static const String sellProduct = 'service/user/account/products/sellProduct';
   static const String sellUpdateProduct = 'service/user/account/products/sellUpdateProduct';
+
+  // Payment Endpoints
+  static const String paymentList = 'service/user/account/payments/list';
 }
