@@ -6,7 +6,6 @@ import '../../core/components/app_dialog.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../auth/login_page.dart';
 import 'settings/account_settings_page.dart';
-import 'settings/notification_settings_page.dart';
 import 'settings/privacy_settings_page.dart';
 import 'settings/help_support_page.dart';
 import 'settings/about_page.dart';
@@ -86,28 +85,8 @@ class SettingsPage extends StatelessWidget {
             },
           ),
 
-          const SizedBox(height: 16),
 
-          // Bildirimler Bölümü
-          _buildSectionHeader('Bildirimler'),
-          _buildSettingsTile(
-            context: context,
-            icon: Icons.notifications_outlined,
-            title: 'Bildirim Ayarları',
-            subtitle: 'Bildirim tercihlerinizi yönetin',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const NotificationSettingsPage(),
-                ),
-              );
-            },
-          ),
 
-          const SizedBox(height: 16),
-
-          // Gizlilik ve Güvenlik Bölümü
-          _buildSectionHeader('Gizlilik ve Güvenlik'),
           _buildSettingsTile(
             context: context,
             icon: Icons.security_outlined,
@@ -129,7 +108,7 @@ class SettingsPage extends StatelessWidget {
           _buildSettingsTile(
             context: context,
             icon: Icons.description_outlined,
-            title: 'Dökümanlar',
+            title: 'Sözleşmeler',
             subtitle: 'Sözleşmeler ve yasal dökümanlar',
             onTap: () {
               Navigator.of(context).push(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
+import 'change_password_page.dart';
 
 class PrivacySettingsPage extends StatelessWidget {
   const PrivacySettingsPage({super.key});
@@ -48,11 +49,41 @@ class PrivacySettingsPage extends StatelessWidget {
 
           _buildPolicyTile(
             context: context,
-            icon: Icons.description_outlined,
-            title: 'Kullanım Koşulları',
-            subtitle: 'Uygulama kullanım koşullarını görüntüle',
+            icon: Icons.handshake_outlined,
+            title: 'Satıcı İş Ortaklığı ve E-Ticaret Aracılık Sözleşmesi',
+            subtitle: 'İş ortaklığı sözleşmesini görüntüle',
             onTap: () {
-              // TODO: Kullanım koşulları sayfasına yönlendir
+              _launchURL('https://www.besliyorum.com/satici-is-ortakligi-ve-elektronik-ticaret-aracilik-hizmetleri-sozlesmesi');
+            },
+          ),
+
+          _buildPolicyTile(
+            context: context,
+            icon: Icons.person_add_outlined,
+            title: 'Üyelik Sözleşmesi',
+            subtitle: 'Üyelik sözleşmesini görüntüle',
+            onTap: () {
+              _launchURL('https://www.besliyorum.com/uyelik-sozlesmesi');
+            },
+          ),
+
+          _buildPolicyTile(
+            context: context,
+            icon: Icons.shopping_cart_outlined,
+            title: 'Mesafeli Satış Sözleşmesi',
+            subtitle: 'Mesafeli satış sözleşmesini görüntüle',
+            onTap: () {
+              _launchURL('https://www.besliyorum.com/mesafeli-satis-sozlesmesi');
+            },
+          ),
+
+          _buildPolicyTile(
+            context: context,
+            icon: Icons.rule_outlined,
+            title: 'Satıcı Kuralları',
+            subtitle: 'Satıcı kurallarını görüntüle',
+            onTap: () {
+              _launchURL('https://www.besliyorum.com/satici-kurallari');
             },
           ),
 
@@ -62,7 +93,7 @@ class PrivacySettingsPage extends StatelessWidget {
             title: 'Gizlilik Politikası',
             subtitle: 'Gizlilik politikamızı görüntüle',
             onTap: () {
-              // TODO: Gizlilik politikası sayfasına yönlendir
+              _launchURL('https://www.besliyorum.com/gizlilik-politikasi');
             },
           ),
 
@@ -72,17 +103,7 @@ class PrivacySettingsPage extends StatelessWidget {
             title: 'KVKK Aydınlatma Metni',
             subtitle: 'Kişisel verilerin korunması',
             onTap: () {
-              _launchURL('https://www.besliyorum.com/kvkk');
-            },
-          ),
-
-          _buildPolicyTile(
-            context: context,
-            icon: Icons.storefront_outlined,
-            title: 'Satıcı Sözleşmesi',
-            subtitle: 'Satıcı sözleşmesini görüntüle',
-            onTap: () {
-              // TODO: Satıcı sözleşmesi sayfasına yönlendir
+              _launchURL('https://www.besliyorum.com/kvkk-aydinlatma-metni');
             },
           ),
 
@@ -104,7 +125,11 @@ class PrivacySettingsPage extends StatelessWidget {
             title: 'Şifre Değiştir',
             subtitle: 'Hesap şifrenizi değiştirin',
             onTap: () {
-              // TODO: Şifre değiştirme sayfası
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ChangePasswordPage(),
+                ),
+              );
             },
           ),
 
