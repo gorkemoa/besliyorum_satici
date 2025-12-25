@@ -7,6 +7,7 @@ import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import 'package:besliyorum_satici/models/home/home_model.dart';
 import '../auth/login_page.dart';
+import '../profile/settings/address_form_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,7 +31,10 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadData() async {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
-    final notificationViewModel = Provider.of<NotificationViewModel>(context, listen: false);
+    final notificationViewModel = Provider.of<NotificationViewModel>(
+      context,
+      listen: false,
+    );
 
     final userId = authViewModel.loginResponse?.data?.userID;
     final token = authViewModel.loginResponse?.data?.token;
@@ -40,6 +44,26 @@ class _HomePageState extends State<HomePage> {
         homeViewModel.getUserAccount(userId, token),
         notificationViewModel.getNotifications(token),
       ]);
+
+      // Adres kontrolü yap - getUserAccount'tan gelen verilere göre
+      if (mounted) {
+        final homeData = homeViewModel.homeData;
+        if (homeData != null &&
+            !homeData.isAddressComplete &&
+            homeData.missingAddressTypes.isNotEmpty) {
+          // Adres ekleme sayfasına yönlendir
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => AddressFormPage(
+                  requiredAddressTypeId: homeData.missingAddressTypes.first,
+                ),
+              ),
+              (route) => false,
+            );
+          }
+        }
+      }
     }
   }
 
@@ -55,7 +79,7 @@ class _HomePageState extends State<HomePage> {
           leading: Padding(
             padding: const EdgeInsets.all(6.0),
             child: GestureDetector(
-              onTap: () async { },
+              onTap: () async {},
               child: Image.asset(
                 'assets/Icons/logoyazi.png',
                 fit: BoxFit.contain,
@@ -64,49 +88,51 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           leadingWidth: 180,
-        actions: [
-          Consumer<NotificationViewModel>(
-            builder: (context, notificationViewModel, child) {
-              final unreadCount = notificationViewModel.unreadCount;
-              return Padding(
-                padding: const EdgeInsets.all(6.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: Badge(
-                      isLabelVisible: unreadCount > 0,
-                      label: Text(
-                        unreadCount > 9 ? '9+' : unreadCount.toString(),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+          actions: [
+            Consumer<NotificationViewModel>(
+              builder: (context, notificationViewModel, child) {
+                final unreadCount = notificationViewModel.unreadCount;
+                return Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: Badge(
+                        isLabelVisible: unreadCount > 0,
+                        label: Text(
+                          unreadCount > 9 ? '9+' : unreadCount.toString(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        backgroundColor: AppTheme.primaryColor,
+                        child: Image.asset(
+                          'assets/Icons/bildirim.png',
+                          width: 25,
+                          height: 25,
+                          fit: BoxFit.contain,
+                          color: AppTheme.primaryColor,
                         ),
                       ),
-                      backgroundColor: AppTheme.primaryColor,
-                      child: Image.asset(
-                        'assets/Icons/bildirim.png',
-                        width: 25,
-                        height: 25,
-                        fit: BoxFit.contain,
-                        color: AppTheme.primaryColor,
-                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationsPage(),
+                          ),
+                        );
+                      },
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const NotificationsPage()),
-                      );
-                    },
                   ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+          ],
         ),
       ),
       body: Consumer<HomeViewModel>(
@@ -353,5 +379,4 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 }

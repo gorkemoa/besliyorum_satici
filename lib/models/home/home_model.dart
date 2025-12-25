@@ -44,6 +44,8 @@ class HomeData {
   final String androidVersion;
   final String profilePhoto;
   final String storeLogo;
+  final bool isAddressComplete;
+  final List<int> missingAddressTypes;
   final Statistics statistics;
 
   HomeData({
@@ -69,6 +71,8 @@ class HomeData {
     required this.androidVersion,
     required this.profilePhoto,
     required this.storeLogo,
+    this.isAddressComplete = true,
+    this.missingAddressTypes = const [],
     required this.statistics,
   });
 
@@ -96,6 +100,10 @@ class HomeData {
       androidVersion: json['androidVersion'],
       profilePhoto: json['profilePhoto'] ?? '',
       storeLogo: json['storeLogo'],
+      isAddressComplete: json['isAddressComplete'] ?? true,
+      missingAddressTypes: json['missingAddressTypes'] != null
+          ? List<int>.from(json['missingAddressTypes'])
+          : [],
       statistics: Statistics.fromJson(json['statistics']),
     );
   }

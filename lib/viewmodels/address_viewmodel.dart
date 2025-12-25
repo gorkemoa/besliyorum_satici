@@ -272,6 +272,18 @@ class AddressViewModel extends ChangeNotifier {
     }
   }
 
+  /// Finds and sets address type by ID
+  void setAddressTypeById(int typeId) {
+    if (_addressTypes.isEmpty) return;
+    try {
+      final type = _addressTypes.firstWhere((t) => t.typeID == typeId);
+      _selectedAddressType = type;
+      notifyListeners();
+    } catch (e) {
+      // Type not found
+    }
+  }
+
   /// Adds a new address
   Future<bool> addAddress({
     required String userToken,

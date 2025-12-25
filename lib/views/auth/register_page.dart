@@ -246,6 +246,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             isLoading: viewModel.isLoadingCities,
                             onChanged: (city) => viewModel.setCity(city),
                             itemBuilder: (city) => city.name,
+                            
                           );
                         },
                       ),

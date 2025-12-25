@@ -31,16 +31,8 @@ class _SplashPageState extends State<SplashPage> {
 
     if (mounted) {
       if (token != null && token.isNotEmpty) {
-        // Need to populate VM with user data if possible, or just navigate to Home
-        // Home will try to load data. But Home needs UserID.
-        // We saved UserID too.
         final userId = await localStorage.getUserId();
         if (userId != null) {
-          // We might need to preload this into AuthViewModel so Home can read it
-          // OR Home should read from Storage if VM is empty.
-          // Let's navigate to Home, and update Home to read from storage if needed?
-          // Actually Home reads from AuthViewModel.
-          // Better approach: Populate AuthViewModel here.
           final authViewModel = Provider.of<AuthViewModel>(
             context,
             listen: false,

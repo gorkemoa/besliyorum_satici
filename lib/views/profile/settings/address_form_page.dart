@@ -9,11 +9,17 @@ import '../../../models/address/city_model.dart';
 import '../../../models/address/district_model.dart';
 import '../../../models/address/neighborhood_model.dart';
 import '../../../models/address/address_type_model.dart';
+import '../../main_navigation.dart';
 
 class AddressFormPage extends StatefulWidget {
   final AddressModel? existingAddress;
+  final int? requiredAddressTypeId;
 
-  const AddressFormPage({super.key, this.existingAddress});
+  const AddressFormPage({
+    super.key,
+    this.existingAddress,
+    this.requiredAddressTypeId,
+  });
 
   @override
   State<AddressFormPage> createState() => _AddressFormPageState();
@@ -25,6 +31,7 @@ class _AddressFormPageState extends State<AddressFormPage> {
   bool _isInitializing = true;
 
   bool get isEditing => widget.existingAddress != null;
+  bool get isRequiredAddressMode => widget.requiredAddressTypeId != null;
 
   @override
   void initState() {
@@ -54,6 +61,8 @@ class _AddressFormPageState extends State<AddressFormPage> {
       addressViewModel.setAddressTypeByName(existingAddress.addressType);
       await addressViewModel.setCityByName(existingAddress.cityName);
       await addressViewModel.setDistrictByName(existingAddress.districtName);
+    } else if (widget.requiredAddressTypeId != null && mounted) {
+      addressViewModel.setAddressTypeById(widget.requiredAddressTypeId!);
     }
 
     if (mounted) {
@@ -127,6 +136,16 @@ class _AddressFormPageState extends State<AddressFormPage> {
 
     if (success && mounted) {
       await addressViewModel.fetchAddresses(token);
+
+      if (widget.requiredAddressTypeId != null && mounted) {
+        _showSuccess('Adres eklendi');
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const MainNavigation()),
+          (route) => false,
+        );
+        return;
+      }
+
       if (mounted) {
         Navigator.of(context).pop(true);
         _showSuccess(isEditing ? 'Adres güncellendi' : 'Adres eklendi');
@@ -200,34 +219,50 @@ class _AddressFormPageState extends State<AddressFormPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
+                    // ButtonTheme ve Material ekleyerek metin stili garantilenir
+                    Material(
+                      color: Colors.transparent,
+                      child: CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        child: Text(
+                          'İptal',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                    Material(
+                      color: Colors.transparent,
                       child: Text(
-                        'İptal',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      child: const Text(
-                        'Tamam',
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
+                        title,
+                        style: const TextStyle(
                           fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: Colors.black,
+                          decoration: TextDecoration.none,
                         ),
                       ),
-                      onPressed: () {
-                        onSelected(items[currentIndex]);
-                        Navigator.pop(context);
-                      },
+                    ),
+                    Material(
+                      color: Colors.transparent,
+                      child: CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        child: const Text(
+                          'Tamam',
+                          style: TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        onPressed: () {
+                          onSelected(items[currentIndex]);
+                          Navigator.pop(context);
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -243,10 +278,15 @@ class _AddressFormPageState extends State<AddressFormPage> {
                     currentIndex = index;
                   },
                   children: items.map((item) {
+                    // DÜZELTME: Picker içindeki elemanlara decoration: TextDecoration.none EKLENDİ
                     return Center(
                       child: Text(
                         displayText(item),
-                        style: const TextStyle(fontSize: 16),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          decoration: TextDecoration.none, // SARI ÇİZGİYİ BU KALDIRIR
+                        ),
                       ),
                     );
                   }).toList(),
@@ -261,183 +301,229 @@ class _AddressFormPageState extends State<AddressFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: AppTheme.primaryColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: Image.asset(
-            'assets/Icons/geri.png',
-            width: 24,
-            height: 24,
+    String appBarTitle;
+    if (isRequiredAddressMode) {
+      appBarTitle = 'Zorunlu Adres Ekle';
+    } else if (isEditing) {
+      appBarTitle = 'Adresi Düzenle';
+    } else {
+      appBarTitle = 'Yeni Adres';
+    }
+
+    return PopScope(
+      canPop: !isRequiredAddressMode,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: AppTheme.primaryColor,
+          elevation: 0,
+          leading: isRequiredAddressMode
+              ? null
+              : IconButton(
+                  icon: Image.asset(
+                    'assets/Icons/geri.png',
+                    width: 24,
+                    height: 24,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+          automaticallyImplyLeading: !isRequiredAddressMode,
+          centerTitle: true,
+          title: Text(
+            appBarTitle,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          onPressed: () => Navigator.of(context).pop(),
         ),
-        centerTitle: true,
-        title: Text(
-          isEditing ? 'Adresi Düzenle' : 'Yeni Adres',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      body: _isInitializing
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryColor),
-            )
-          : Consumer<AddressViewModel>(
-              builder: (context, viewModel, child) {
-                return Form(
-                  key: _formKey,
-                  child: ListView(
-                    padding: const EdgeInsets.all(20),
-                    children: [
-                      if (!isEditing) ...[
+        body: _isInitializing
+            ? const Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryColor),
+              )
+            : Consumer<AddressViewModel>(
+                builder: (context, viewModel, child) {
+                  return Form(
+                    key: _formKey,
+                    child: ListView(
+                      padding: const EdgeInsets.all(20),
+                      children: [
+                        if (isRequiredAddressMode) ...[
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.orange[50],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.orange[200]!),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  color: Colors.orange[700],
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Devam edebilmek için bu adresi eklemeniz gerekmektedir.',
+                                    style: TextStyle(
+                                      color: Colors.orange[800],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        if (!isEditing) ...[
+                          _buildPickerField(
+                            label: 'Adres Tipi',
+                            value: viewModel.selectedAddressType?.typeName,
+                            placeholder: 'Seçiniz',
+                            isLoading: viewModel.isAddressTypesLoading,
+                            isEnabled: !isRequiredAddressMode,
+                            onTap: () => _showCupertinoPicker<AddressTypeModel>(
+                              title: 'Adres Tipi',
+                              items: viewModel.addressTypes,
+                              selectedItem: viewModel.selectedAddressType,
+                              displayText: (item) => item.typeName,
+                              onSelected: viewModel.setSelectedAddressType,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
                         _buildPickerField(
-                          label: 'Adres Tipi',
-                          value: viewModel.selectedAddressType?.typeName,
+                          label: 'İl',
+                          value: viewModel.selectedCity?.cityName,
                           placeholder: 'Seçiniz',
-                          isLoading: viewModel.isAddressTypesLoading,
-                          onTap: () => _showCupertinoPicker<AddressTypeModel>(
-                            title: 'Adres Tipi',
-                            items: viewModel.addressTypes,
-                            selectedItem: viewModel.selectedAddressType,
-                            displayText: (item) => item.typeName,
-                            onSelected: viewModel.setSelectedAddressType,
+                          isLoading: viewModel.isCitiesLoading,
+                          onTap: () => _showCupertinoPicker<CityModel>(
+                            title: 'İl Seçin',
+                            items: viewModel.cities,
+                            selectedItem: viewModel.selectedCity,
+                            displayText: (item) => item.cityName,
+                            onSelected: viewModel.setSelectedCity,
                           ),
                         ),
                         const SizedBox(height: 16),
-                      ],
 
-                      _buildPickerField(
-                        label: 'İl',
-                        value: viewModel.selectedCity?.cityName,
-                        placeholder: 'Seçiniz',
-                        isLoading: viewModel.isCitiesLoading,
-                        onTap: () => _showCupertinoPicker<CityModel>(
-                          title: 'İl Seçin',
-                          items: viewModel.cities,
-                          selectedItem: viewModel.selectedCity,
-                          displayText: (item) => item.cityName,
-                          onSelected: viewModel.setSelectedCity,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildPickerField(
-                        label: 'İlçe',
-                        value: viewModel.selectedDistrict?.districtName,
-                        placeholder: viewModel.selectedCity == null
-                            ? 'Önce il seçin'
-                            : 'Seçiniz',
-                        isLoading: viewModel.isDistrictsLoading,
-                        isEnabled: viewModel.selectedCity != null,
-                        onTap: () => _showCupertinoPicker<DistrictModel>(
-                          title: 'İlçe Seçin',
-                          items: viewModel.districts,
-                          selectedItem: viewModel.selectedDistrict,
-                          displayText: (item) => item.districtName,
-                          onSelected: viewModel.setSelectedDistrict,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildPickerField(
-                        label: 'Mahalle',
-                        value:
-                            viewModel.selectedNeighborhood?.neighbourhoodName,
-                        placeholder: viewModel.selectedDistrict == null
-                            ? 'Önce ilçe seçin'
-                            : 'Seçiniz',
-                        isLoading: viewModel.isNeighborhoodsLoading,
-                        isEnabled: viewModel.selectedDistrict != null,
-                        onTap: () => _showCupertinoPicker<NeighborhoodModel>(
-                          title: 'Mahalle Seçin',
-                          items: viewModel.neighborhoods,
-                          selectedItem: viewModel.selectedNeighborhood,
-                          displayText: (item) => item.neighbourhoodName,
-                          onSelected: viewModel.setSelectedNeighborhood,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildLabel('Adres Detayı'),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _addressController,
-                        maxLines: 3,
-                        style: const TextStyle(fontSize: 15),
-                        decoration: InputDecoration(
-                          hintText: 'Sokak, bina no, daire no...',
-                          hintStyle: TextStyle(color: Colors.grey[400]),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: const EdgeInsets.all(16),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppTheme.primaryColor,
-                            ),
+                        _buildPickerField(
+                          label: 'İlçe',
+                          value: viewModel.selectedDistrict?.districtName,
+                          placeholder: viewModel.selectedCity == null
+                              ? 'Önce il seçin'
+                              : 'Seçiniz',
+                          isLoading: viewModel.isDistrictsLoading,
+                          isEnabled: viewModel.selectedCity != null,
+                          onTap: () => _showCupertinoPicker<DistrictModel>(
+                            title: 'İlçe Seçin',
+                            items: viewModel.districts,
+                            selectedItem: viewModel.selectedDistrict,
+                            displayText: (item) => item.districtName,
+                            onSelected: viewModel.setSelectedDistrict,
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Adres detayı gerekli';
-                          }
-                          if (value.trim().length < 10) {
-                            return 'En az 10 karakter girin';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 32),
+                        const SizedBox(height: 16),
 
-                      SizedBox(
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: viewModel.isSaving ? null : _saveAddress,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryColor,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
+                        _buildPickerField(
+                          label: 'Mahalle',
+                          value:
+                              viewModel.selectedNeighborhood?.neighbourhoodName,
+                          placeholder: viewModel.selectedDistrict == null
+                              ? 'Önce ilçe seçin'
+                              : 'Seçiniz',
+                          isLoading: viewModel.isNeighborhoodsLoading,
+                          isEnabled: viewModel.selectedDistrict != null,
+                          onTap: () => _showCupertinoPicker<NeighborhoodModel>(
+                            title: 'Mahalle Seçin',
+                            items: viewModel.neighborhoods,
+                            selectedItem: viewModel.selectedNeighborhood,
+                            displayText: (item) => item.neighbourhoodName,
+                            onSelected: viewModel.setSelectedNeighborhood,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        _buildLabel('Adres Detayı'),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _addressController,
+                          maxLines: 3,
+                          style: const TextStyle(fontSize: 15),
+                          decoration: InputDecoration(
+                            hintText: 'Sokak, bina no, daire no...',
+                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            contentPadding: const EdgeInsets.all(16),
+                            border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
                             ),
-                            elevation: 0,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
                           ),
-                          child: viewModel.isSaving
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  isEditing ? 'Güncelle' : 'Kaydet',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Adres detayı gerekli';
+                            }
+                            if (value.trim().length < 10) {
+                              return 'En az 10 karakter girin';
+                            }
+                            return null;
+                          },
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                        const SizedBox(height: 32),
+
+                        SizedBox(
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: viewModel.isSaving ? null : _saveAddress,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: viewModel.isSaving
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    isEditing ? 'Güncelle' : 'Kaydet',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+      ),
     );
   }
 
@@ -478,36 +564,44 @@ class _AddressFormPageState extends State<AddressFormPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: isLoading
-                      ? Row(
-                          children: [
-                            SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.grey[400],
+                  // DÜZELTME: Material Widget eklendi. Metin stilini garantiye alır.
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: isLoading
+                        ? Row(
+                            children: [
+                              SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.grey[400],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Yükleniyor...',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Colors.grey[400],
+                              const SizedBox(width: 12),
+                              Text(
+                                'Yükleniyor...',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.grey[400],
+                                  decoration: TextDecoration.none,
+                                ),
                               ),
+                            ],
+                          )
+                        : Text(
+                            value ?? placeholder,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: value != null
+                                  ? Colors.black87
+                                  : Colors.grey[400],
+                              decoration: TextDecoration.none,
                             ),
-                          ],
-                        )
-                      : Text(
-                          value ?? placeholder,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: value != null
-                                ? Colors.black87
-                                : Colors.grey[400],
                           ),
-                        ),
+                  ),
                 ),
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
