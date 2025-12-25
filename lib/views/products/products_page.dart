@@ -23,6 +23,7 @@ class _ProductsPageState extends State<ProductsPage>
   final ScrollController _sellerScrollController = ScrollController();
   final ScrollController _catalogScrollController = ScrollController();
   int? _selectedCatID;
+  bool _isLoggingOut = false;
 
   @override
   void initState() {
@@ -162,11 +163,16 @@ class _ProductsPageState extends State<ProductsPage>
   }
 
   void _handleLogout(String? errorMessage) {
-    if (errorMessage == '403_LOGOUT') {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-        (route) => false,
-      );
+    if (errorMessage == '403_LOGOUT' && !_isLoggingOut) {
+      _isLoggingOut = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        }
+      });
     }
   }
 
