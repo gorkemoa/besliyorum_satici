@@ -651,14 +651,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.primaryColor,
         elevation: 0,
         scrolledUnderElevation: 0,
       leading: IconButton(
   icon: ImageIcon(
     AssetImage('assets/Icons/geri.png'),
     size: 20,
-    color: AppTheme.textPrimary,
+    color: AppTheme.secondaryColor,
   ),
   onPressed: () => Navigator.of(context).pop(),
 ),
@@ -667,7 +667,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         title: Text(
           'Sipariş Detayı',
           style: TextStyle(
-            color: AppTheme.textPrimary,
+            color: AppTheme.secondaryColor,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),

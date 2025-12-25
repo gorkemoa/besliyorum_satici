@@ -67,10 +67,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Colors.white),

@@ -320,13 +320,12 @@ class ProductViewModel extends ChangeNotifier {
     }
   }
 
-  /// Tüm state'i sıfırla
+  /// Tüm state'i sıfırla (initState için - notifyListeners çağırmaz)
   void resetState() {
     resetSellerProducts();
     resetCatalogProducts();
     _categories = [];
     _categoriesErrorMessage = null;
     _isCategoriesLoading = false;
-    notifyListeners();
   }
 }
