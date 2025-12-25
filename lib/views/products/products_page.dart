@@ -33,6 +33,9 @@ class _ProductsPageState extends State<ProductsPage>
     _sellerScrollController.addListener(_onSellerScroll);
     _catalogScrollController.addListener(_onCatalogScroll);
 
+    // Önceki 403 hatası durumunu temizle
+    Provider.of<ProductViewModel>(context, listen: false).resetState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
     });
@@ -193,11 +196,11 @@ class _ProductsPageState extends State<ProductsPage>
               // DÜZELTİLDİ: Başlık buraya taşındı ve rengi koyu yapıldı
               title: Text(
                 'Ürünlerim',
-                 style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(80),
@@ -346,7 +349,7 @@ class _ProductsPageState extends State<ProductsPage>
         if (viewModel.categories.isEmpty) return const SizedBox.shrink();
 
         return Container(
-          height:40,
+          height: 40,
           margin: const EdgeInsets.only(bottom: 15),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
@@ -367,15 +370,10 @@ class _ProductsPageState extends State<ProductsPage>
                 name: category.catName,
                 isSelected: _selectedCatID == category.catID,
               );
-  
             },
-  
           ),
-  
         );
-  
       },
-  
     );
   }
 
@@ -413,13 +411,10 @@ class _ProductsPageState extends State<ProductsPage>
                 color: isSelected ? AppTheme.primaryColor : Colors.grey[300]!,
                 width: isSelected ? 0 : 1.5,
               ),
-              boxShadow: isSelected
-                  ? [
+              boxShadow: isSelected ? [
                      
                     ]
-                  : [
-                     
-                    ],
+                  : [],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

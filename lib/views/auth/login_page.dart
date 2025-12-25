@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:besliyorum_satici/core/components/app_dialog.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/home_viewmodel.dart';
+import '../../viewmodels/order_viewmodel.dart';
+import '../../viewmodels/product_viewmodel.dart';
+import '../../viewmodels/payment_viewmodel.dart';
+import '../../viewmodels/profile_viewmodel.dart';
+import '../../viewmodels/notification_viewmodel.dart';
 import '../../services/firebase_messaging_service.dart';
 import 'register_page.dart';
 
@@ -24,6 +30,17 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  /// Tüm ViewModel'lerdeki hata durumlarını temizler
+  /// 403 logout sonrası yeniden giriş yapıldığında eski hata state'lerini temizlemek için
+  void _resetAllViewModels(BuildContext context) {
+    Provider.of<HomeViewModel>(context, listen: false).resetState();
+    Provider.of<OrderViewModel>(context, listen: false).resetState();
+    Provider.of<ProductViewModel>(context, listen: false).resetState();
+    Provider.of<PaymentViewModel>(context, listen: false).resetState();
+    Provider.of<ProfileViewModel>(context, listen: false).resetState();
+    Provider.of<NotificationViewModel>(context, listen: false).resetState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -34,7 +51,6 @@ class _LoginPageState extends State<LoginPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            
             // Top Section
             Container(
               width: double.infinity,
@@ -45,24 +61,17 @@ class _LoginPageState extends State<LoginPage> {
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
                 ),
-             
               ),
-              
+
               child: Center(
-                
                 child: Padding(
-                  
                   padding: const EdgeInsets.fromLTRB(0, 80, 0, 30),
                   child: Image.asset(
-                    
                     'assets/Icons/bes-logo-beyaz-sloganli.png',
                     fit: BoxFit.contain,
-                    
                   ),
-                
                 ),
               ),
-          
             ),
 
             // Bottom Section
@@ -142,15 +151,21 @@ class _LoginPageState extends State<LoginPage> {
                                       userId.toString(),
                                     );
                                   }
+
+                                  // Tüm ViewModel'lerdeki hata durumlarını temizle
+                                  if (context.mounted) {
+                                    _resetAllViewModels(context);
+                                  }
+
                                   // Navigate to next screen or show success
                                   if (context.mounted) {
-                                    Future.microtask(() {
-                                      Navigator.of(context).pushReplacement(
-                                        MaterialPageRoute(
-                                          builder: (context) => const MainNavigation(),
-                                        ),
-                                      );
-                                    });
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const MainNavigation(),
+                                      ),
+                                      (route) => false,
+                                    );
                                   }
                                 }
                               },
