@@ -277,37 +277,49 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final isMarkedForRemoval = editedVariant?.isRemove ?? false;
     final isUnpublished = editedVariant != null ? !editedVariant.isPublished : (sellerData != null && !sellerData.isPublished);
 
-    return InkWell(
-      onTap: isSelling
-          ? () => _showSellingVariantEditSheet(variation, viewModel)
-          : () => _showVariantEditSheet(variation, viewModel),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        color: isMarkedForRemoval
-            ? Colors.red.withOpacity(0.05)
-            : isEdited
-                ? Colors.orange.withOpacity(0.05)
-                : isSelected
-                    ? AppTheme.primaryColor.withOpacity(0.05)
-                    : Colors.white,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Checkbox (sadece satışta olmayanlar için)
-            if (!isSelling)
-              Checkbox(
-                value: isSelected,
-                onChanged: (value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      color: isMarkedForRemoval
+          ? Colors.red.withOpacity(0.05)
+          : isEdited
+              ? Colors.orange.withOpacity(0.05)
+              : isSelected
+                  ? AppTheme.primaryColor.withOpacity(0.05)
+                  : Colors.white,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Checkbox (sadece satışta olmayanlar için)
+          if (!isSelling)
+            Checkbox(
+              value: isSelected,
+              onChanged: (value) {
+                if (value == true) {
                   viewModel.toggleVariantSelection(variation.variantID);
-                },
-                activeColor: AppTheme.primaryColor,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              ),
+                  _showVariantEditSheet(variation, viewModel);
+                } else {
+                  viewModel.toggleVariantSelection(variation.variantID);
+                }
+              },
+              activeColor: AppTheme.primaryColor,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
 
-            // Sol Taraf: Varyasyon İsmi ve Stok Bilgisi
-            Expanded(
-              flex: 3,
+          // Sol Taraf: Varyasyon İsmi ve Stok Bilgisi
+          Expanded(
+            flex: 3,
+            child: InkWell(
+              onTap: isSelling
+                  ? () => _showSellingVariantEditSheet(variation, viewModel)
+                  : () {
+                      // Seçili değilse önce seç
+                      if (!isSelected) {
+                        viewModel.toggleVariantSelection(variation.variantID);
+                      }
+                      // Ardından bottom sheet'i aç
+                      _showVariantEditSheet(variation, viewModel);
+                    },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -370,16 +382,28 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ],
               ),
             ),
+          ),
 
-            // Sağ Taraf: Fiyat
-            Expanded(
+          // Sağ Taraf: Fiyat
+          Expanded(
               flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (isSelling && sellerData != null) ...[
-                    if (hasDiscount)
-                      Text(
+              child: InkWell(
+                onTap: isSelling
+                    ? () => _showSellingVariantEditSheet(variation, viewModel)
+                    : () {
+                        // Seçili değilse önce seç
+                        if (!isSelected) {
+                          viewModel.toggleVariantSelection(variation.variantID);
+                        }
+                        // Ardından bottom sheet'i aç
+                        _showVariantEditSheet(variation, viewModel);
+                      },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (isSelling && sellerData != null) ...[
+                        if (hasDiscount)
+                          Text(
                         '${sellerData.price.toStringAsFixed(2)} TL',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
@@ -487,10 +511,22 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ],
               ),
             ),
+          ),
 
-            // En Sağ: Ok veya Düzenle ikonu
-            const SizedBox(width: 8),
-            Padding(
+          // En Sağ: Ok veya Düzenle ikonu
+          const SizedBox(width: 8),
+          InkWell(
+              onTap: isSelling
+                  ? () => _showSellingVariantEditSheet(variation, viewModel)
+                  : () {
+                      // Seçili değilse önce seç
+                      if (!isSelected) {
+                        viewModel.toggleVariantSelection(variation.variantID);
+                      }
+                      // Ardından bottom sheet'i aç
+                      _showVariantEditSheet(variation, viewModel);
+                    },
+            child: Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Icon(
                 isSelling ? Icons.check_circle : Icons.edit_outlined,
@@ -498,8 +534,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 size: 20,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -550,7 +586,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      viewModel.toggleVariantSelection(variation.variantID);
+                      Navigator.pop(context);
+                    },
                     icon: const Icon(Icons.close),
                   ),
                 ],
