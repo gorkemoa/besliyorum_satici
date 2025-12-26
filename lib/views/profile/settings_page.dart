@@ -165,15 +165,7 @@ class SettingsPage extends StatelessWidget {
                 horizontal: 16,
                 vertical: 8,
               ),
-              leading: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.logout, color: Colors.red, size: 24),
-              ),
+              leading: const Icon(Icons.logout, color: Colors.red, size: 24),
               title: Text(
                 'Çıkış Yap',
                 style: GoogleFonts.poppins(
@@ -192,7 +184,7 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 40),
         ],
       ),
     );
@@ -221,10 +213,10 @@ class SettingsPage extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withValues(alpha: 0.08),
@@ -236,15 +228,7 @@ class SettingsPage extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: AppTheme.primaryColor, size: 24),
-        ),
+        leading: Icon(icon, color: AppTheme.primaryColor, size: 24),
         title: Text(
           title,
           style: GoogleFonts.poppins(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:upgrader/upgrader.dart';
 import 'package:provider/provider.dart';
 import 'package:besliyorum_satici/views/splash/splash_page.dart';
 import 'package:besliyorum_satici/core/theme/app_theme.dart';
@@ -82,7 +83,17 @@ class MyApp extends StatelessWidget {
           title: 'Besliyorum Satıcı',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
-          home: const SplashPage(),
+          home: UpgradeAlert(
+            upgrader: Upgrader(
+              durationUntilAlertAgain: Duration.zero,
+              messages: UpgraderMessages(code: 'tr'),
+            ),
+            dialogStyle: UpgradeDialogStyle.cupertino,
+            showIgnore: false,
+            showLater: false,
+            barrierDismissible: false,
+            child: const SplashPage(),
+          ),
           // 👇 BUNLAR ŞART
           locale: const Locale('tr', 'TR'),
           supportedLocales: const [Locale('tr', 'TR')],

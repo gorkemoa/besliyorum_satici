@@ -264,6 +264,21 @@ class AddressViewModel extends ChangeNotifier {
     }
   }
 
+  /// Finds and sets neighborhood by name
+  void setNeighborhoodByName(String neighborhoodName) {
+    if (_neighborhoods.isEmpty) return;
+    try {
+      final neighborhood = _neighborhoods.firstWhere(
+        (n) =>
+            n.neighbourhoodName.toUpperCase() == neighborhoodName.toUpperCase(),
+      );
+      _selectedNeighborhood = neighborhood;
+      notifyListeners();
+    } catch (e) {
+      // Neighborhood not found
+    }
+  }
+
   /// Finds and sets address type by name
   void setAddressTypeByName(String typeName) {
     if (_addressTypes.isEmpty) return;

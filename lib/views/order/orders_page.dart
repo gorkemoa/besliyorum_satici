@@ -108,7 +108,6 @@ class _OrdersPageState extends State<OrdersPage> {
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                         decoration: TextDecoration.none,
-
                       ),
                     ),
                     CupertinoButton(
@@ -491,7 +490,7 @@ class _OrdersPageState extends State<OrdersPage> {
       appBar: AppBar(
         backgroundColor: AppTheme.primaryColor,
         elevation: 0,
-         
+
         centerTitle: true,
         title: const Text(
           'Siparişlerim',
@@ -676,7 +675,6 @@ class _OrdersPageState extends State<OrdersPage> {
   }
 
   Widget _buildOrderCard(Order order) {
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -748,10 +746,7 @@ class _OrdersPageState extends State<OrdersPage> {
                         ),
                       ],
                     ),
-                    _buildStatusBadge(
-                      order.orderStatusTitle,
-                      order.isCanceled
-                    ),
+                    _buildStatusBadge(order.orderStatusTitle, order.isCanceled),
                   ],
                 ),
 
@@ -858,10 +853,7 @@ class _OrdersPageState extends State<OrdersPage> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       child: Text(
         displayText,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }

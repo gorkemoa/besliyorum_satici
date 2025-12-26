@@ -37,7 +37,7 @@ class _AddressesPageState extends State<AddressesPage> {
 
   Future<void> _navigateToAddAddress() async {
     final viewModel = Provider.of<AddressViewModel>(context, listen: false);
-    
+
     // Eğer missingAddressTypes varsa, seçim dialogu göster
     if (viewModel.missingAddressTypes.isNotEmpty) {
       await _showAddressTypeSelectionDialog(viewModel.missingAddressTypes);
@@ -48,7 +48,9 @@ class _AddressesPageState extends State<AddressesPage> {
     }
   }
 
-  Future<void> _showAddressTypeSelectionDialog(List<String> missingTypes) async {
+  Future<void> _showAddressTypeSelectionDialog(
+    List<String> missingTypes,
+  ) async {
     final selected = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -62,24 +64,33 @@ class _AddressesPageState extends State<AddressesPage> {
               style: TextStyle(fontSize: 14, color: Colors.black87),
             ),
             const SizedBox(height: 16),
-            ...missingTypes.map((type) => InkWell(
-              onTap: () => Navigator.of(context).pop(type),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    _buildTypeBadge(type),
-                    const Spacer(),
-                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                  ],
+            ...missingTypes.map(
+              (type) => InkWell(
+                onTap: () => Navigator.of(context).pop(type),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildTypeBadge(type),
+                      const Spacer(),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            )),
+            ),
           ],
         ),
         actions: [
@@ -116,7 +127,7 @@ class _AddressesPageState extends State<AddressesPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor:AppTheme.primaryColor,
+        backgroundColor: AppTheme.primaryColor,
         elevation: 0,
         leading: IconButton(
           icon: Image.asset('assets/Icons/geri.png', width: 24, height: 24),
@@ -167,7 +178,8 @@ class _AddressesPageState extends State<AddressesPage> {
             child: Column(
               children: [
                 // Eksik adres tipleri varsa banner göster
-                if (!viewModel.isAddressComplete && viewModel.missingAddressTypes.isNotEmpty)
+                if (!viewModel.isAddressComplete &&
+                    viewModel.missingAddressTypes.isNotEmpty)
                   Container(
                     margin: const EdgeInsets.all(16),
                     padding: const EdgeInsets.all(12),
@@ -178,7 +190,10 @@ class _AddressesPageState extends State<AddressesPage> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.orange[700],
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -210,7 +225,8 @@ class _AddressesPageState extends State<AddressesPage> {
                   child: ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: viewModel.addresses.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       return _buildAddressCard(viewModel.addresses[index]);
                     },
@@ -261,7 +277,11 @@ class _AddressesPageState extends State<AddressesPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.location_off_outlined, size: 56, color: Colors.grey[300]),
+                Icon(
+                  Icons.location_off_outlined,
+                  size: 56,
+                  color: Colors.grey[300],
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Henüz adres eklemediniz',
@@ -272,7 +292,8 @@ class _AddressesPageState extends State<AddressesPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (!viewModel.isAddressComplete && viewModel.missingAddressTypes.isNotEmpty) ...[
+                if (!viewModel.isAddressComplete &&
+                    viewModel.missingAddressTypes.isNotEmpty) ...[
                   Text(
                     'Eksik adres tipleri:',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
@@ -325,7 +346,10 @@ class _AddressesPageState extends State<AddressesPage> {
                 const Spacer(),
                 if (address.isDefault)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.successColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
@@ -347,7 +371,7 @@ class _AddressesPageState extends State<AddressesPage> {
 
             // Location
             Text(
-              '${address.cityName} / ${address.districtName}',
+              '${address.cityName} / ${address.districtName} / ${address.neighborhoodName}',
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,

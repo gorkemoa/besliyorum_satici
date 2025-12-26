@@ -61,6 +61,7 @@ class _AddressFormPageState extends State<AddressFormPage> {
       addressViewModel.setAddressTypeByName(existingAddress.addressType);
       await addressViewModel.setCityByName(existingAddress.cityName);
       await addressViewModel.setDistrictByName(existingAddress.districtName);
+      addressViewModel.setNeighborhoodByName(existingAddress.neighborhoodName);
     } else if (widget.requiredAddressTypeId != null && mounted) {
       addressViewModel.setAddressTypeById(widget.requiredAddressTypeId!);
     }
@@ -285,7 +286,8 @@ class _AddressFormPageState extends State<AddressFormPage> {
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.black87,
-                          decoration: TextDecoration.none, // SARI ÇİZGİYİ BU KALDIRIR
+                          decoration:
+                              TextDecoration.none, // SARI ÇİZGİYİ BU KALDIRIR
                         ),
                       ),
                     );
@@ -368,7 +370,7 @@ class _AddressFormPageState extends State<AddressFormPage> {
                                   child: Text(
                                     'Devam edebilmek için bu adresi eklemeniz gerekmektedir.',
                                     style: TextStyle(
-                                      color: Colors.orange[800],
+                                      color: const Color(0xFFE65100),
                                       fontSize: 14,
                                     ),
                                   ),
@@ -499,6 +501,8 @@ class _AddressFormPageState extends State<AddressFormPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 0,
+                              disabledBackgroundColor: AppTheme.primaryColor
+                                  .withValues(alpha: 0.6),
                             ),
                             child: viewModel.isSaving
                                 ? const SizedBox(

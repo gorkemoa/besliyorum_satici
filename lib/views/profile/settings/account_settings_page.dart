@@ -1,7 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/components/app_dialog.dart';
 import '../../../viewmodels/auth_viewmodel.dart';
@@ -17,7 +17,7 @@ class AccountSettingsPage extends StatefulWidget {
 
 class _AccountSettingsPageState extends State<AccountSettingsPage> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _firstnameController;
   late TextEditingController _lastnameController;
   late TextEditingController _emailController;
@@ -90,31 +90,100 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     }
   }
 
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
+  void _selectDate() {
+    DateTime tempPickedDate = DateTime(2000, 1, 1);
+    if (_birthdayController.text.isNotEmpty) {
+      try {
+        final parts = _birthdayController.text.split('.');
+        if (parts.length == 3) {
+          tempPickedDate = DateTime(
+            int.parse(parts[2]),
+            int.parse(parts[1]),
+            int.parse(parts[0]),
+          );
+        }
+      } catch (_) {}
+    }
+
+    showModalBottomSheet(
       context: context,
-      initialDate: DateTime(2000, 1, 1),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      locale: const Locale('tr', 'TR'),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.primaryColor,
-            ),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext builder) {
+        return Container(
+          height: 300,
+          color: Colors.white,
+          child: Column(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'İptal',
+                        style: TextStyle(color: Colors.red, fontSize: 16),
+                      ),
+                    ),
+                    const Text(
+                      'Tarih Seçiniz',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        final formattedDate =
+                            '${tempPickedDate.day.toString().padLeft(2, '0')}.${tempPickedDate.month.toString().padLeft(2, '0')}.${tempPickedDate.year}';
+                        _birthdayController.text = formattedDate;
+                        Provider.of<SettingsViewModel>(
+                          context,
+                          listen: false,
+                        ).setUserBirthday(formattedDate);
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Bitti',
+                        style: TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: tempPickedDate,
+                  minimumDate: DateTime(1900),
+                  maximumDate: DateTime.now(),
+                  onDateTimeChanged: (DateTime newDate) {
+                    tempPickedDate = newDate;
+                  },
+                ),
+              ),
+            ],
           ),
-          child: child!,
         );
       },
     );
-
-    if (picked != null) {
-      final formattedDate = '${picked.day.toString().padLeft(2, '0')}.${picked.month.toString().padLeft(2, '0')}.${picked.year}';
-      _birthdayController.text = formattedDate;
-      Provider.of<SettingsViewModel>(context, listen: false)
-          .setUserBirthday(formattedDate);
-    }
   }
 
   Future<void> _saveChanges() async {
@@ -144,7 +213,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
       AppDialog.show(
         context: context,
         title: 'Hata',
-        content: settingsViewModel.errorMessage ?? 'Lütfen tüm alanları doldurun',
+        content:
+            settingsViewModel.errorMessage ?? 'Lütfen tüm alanları doldurun',
         type: AppDialogType.alert,
         confirmText: 'Tamam',
       );
@@ -159,7 +229,9 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
     debugPrint('🔵 [ACCOUNT_SETTINGS] API çağrısı başlıyor...');
     final success = await settingsViewModel.updateUser(token);
-    debugPrint('🔵 [ACCOUNT_SETTINGS] API çağrısı tamamlandı. Başarılı: $success');
+    debugPrint(
+      '🔵 [ACCOUNT_SETTINGS] API çağrısı tamamlandı. Başarılı: $success',
+    );
 
     if (mounted) {
       if (success) {
@@ -191,21 +263,22 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppTheme.primaryColor,
         elevation: 0,
-        title: Text(
-          'Hesap Bilgileri',
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+        leading: IconButton(
+          icon: Image.asset('assets/Icons/geri.png', width: 24, height: 24),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+        title: const Text(
+          'Hesap Bilgileri',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: Consumer<SettingsViewModel>(
@@ -226,7 +299,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Form(
               key: _formKey,
               child: Column(
@@ -236,28 +309,27 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
+                      color: Colors.orange[50],
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.orange.shade200,
-                        width: 1,
-                      ),
+                      border: Border.all(color: Colors.orange[200]!, width: 1),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
                           Icons.warning_amber_rounded,
-                          color: Colors.orange.shade700,
+                          color: Colors.orange[700],
                           size: 24,
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
+                        const Expanded(
                           child: Text(
                             'Elektronik Ticaret Aracı Hizmet Sağlayıcı ve Elektronik Ticaret Hizmet Sağlayıcılar Hakkında Yönetmeliğin 5. Maddesi uyarınca telefon numarası ve e-posta adresinizi besliyorum.com\'a bildirmeniz ve doğrulamanız gerekmektedir.',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: Colors.orange.shade800,
+                              color: Color(
+                                0xFFE65100,
+                              ), // orange[900] equivalent
                               height: 1.5,
                             ),
                           ),
@@ -269,22 +341,22 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   const SizedBox(height: 24),
 
                   // Kişisel Bilgiler Başlığı
-                  Text(
+                  const Text(
                     'Kişisel Bilgiler',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
+                    style: TextStyle(
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
+                      color: Colors.black87,
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   // Ad
                   _buildTextField(
                     controller: _firstnameController,
                     label: 'Ad',
-                    icon: Icons.person_outline,
+                    placeholder: 'Adınızı girin',
                     keyboardType: TextInputType.name,
                     textCapitalization: TextCapitalization.words,
                   ),
@@ -295,7 +367,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   _buildTextField(
                     controller: _lastnameController,
                     label: 'Soyad',
-                    icon: Icons.person_outline,
+                    placeholder: 'Soyadınızı girin',
                     keyboardType: TextInputType.name,
                     textCapitalization: TextCapitalization.words,
                   ),
@@ -306,7 +378,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   _buildTextField(
                     controller: _emailController,
                     label: 'E-posta',
-                    icon: Icons.email_outlined,
+                    placeholder: 'E-posta adresinizi girin',
                     keyboardType: TextInputType.emailAddress,
                   ),
 
@@ -316,7 +388,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   _buildTextField(
                     controller: _phoneController,
                     label: 'Telefon',
-                    icon: Icons.phone_outlined,
+                    placeholder: 'Telefon numaranızı girin',
                     keyboardType: TextInputType.phone,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
@@ -330,7 +402,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   _buildTextField(
                     controller: _birthdayController,
                     label: 'Doğum Tarihi',
-                    icon: Icons.cake_outlined,
+                    placeholder: 'Seçiniz',
                     readOnly: true,
                     onTap: _selectDate,
                     suffixIcon: Icons.calendar_today,
@@ -341,7 +413,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   // Cinsiyet
                   _buildDropdownField(
                     label: 'Cinsiyet',
-                    icon: Icons.wc_outlined,
                     value: settingsViewModel.userGender,
                     items: settingsViewModel.genderOptions,
                     onChanged: (value) {
@@ -356,31 +427,35 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   // Kaydet Butonu
                   SizedBox(
                     width: double.infinity,
+                    height: 52,
                     child: ElevatedButton(
-                      onPressed: settingsViewModel.isUpdating ? null : _saveChanges,
+                      onPressed: settingsViewModel.isUpdating
+                          ? null
+                          : _saveChanges,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        disabledBackgroundColor: AppTheme.primaryColor.withValues(alpha: 0.6),
+                        elevation: 0,
+                        disabledBackgroundColor: AppTheme.primaryColor
+                            .withValues(alpha: 0.6),
                       ),
                       child: settingsViewModel.isUpdating
                           ? const SizedBox(
-                              width: 24,
-                              height: 24,
+                              width: 22,
+                              height: 22,
                               child: CircularProgressIndicator(
                                 color: Colors.white,
                                 strokeWidth: 2,
                               ),
                             )
-                          : Text(
+                          : const Text(
                               'Değişiklikleri Kaydet',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
                               ),
                             ),
                     ),
@@ -396,10 +471,21 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     );
   }
 
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: Colors.grey[700],
+      ),
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
-    required IconData icon,
+    String? placeholder,
     TextInputType? keyboardType,
     TextCapitalization textCapitalization = TextCapitalization.none,
     List<TextInputFormatter>? inputFormatters,
@@ -407,131 +493,89 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     VoidCallback? onTap,
     IconData? suffixIcon,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        textCapitalization: textCapitalization,
-        inputFormatters: inputFormatters,
-        readOnly: readOnly,
-        onTap: onTap,
-        style: GoogleFonts.poppins(
-          fontSize: 14,
-          color: Colors.grey[800],
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: GoogleFonts.poppins(
-            fontSize: 14,
-            color: Colors.grey[500],
-          ),
-          prefixIcon: Icon(icon, color: AppTheme.primaryColor),
-          suffixIcon: suffixIcon != null
-              ? Icon(suffixIcon, color: Colors.grey[400], size: 20)
-              : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(
-              color: AppTheme.primaryColor,
-              width: 2,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          textCapitalization: textCapitalization,
+          inputFormatters: inputFormatters,
+          readOnly: readOnly,
+          onTap: onTap,
+          style: const TextStyle(fontSize: 15),
+          decoration: InputDecoration(
+            hintText: placeholder,
+            hintStyle: TextStyle(color: Colors.grey[400]),
+            filled: true,
+            fillColor: Colors.grey[50],
+            contentPadding: const EdgeInsets.all(16),
+            suffixIcon: suffixIcon != null
+                ? Icon(suffixIcon, color: Colors.grey[400], size: 20)
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppTheme.primaryColor),
             ),
           ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildDropdownField({
     required String label,
-    required IconData icon,
     required String value,
     required List<String> items,
     required void Function(String?) onChanged,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(label),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
           ),
-        ],
-      ),
-      child: DropdownButtonFormField<String>(
-        value: items.contains(value) ? value : items.first,
-        items: items.map((item) {
-          return DropdownMenuItem(
-            value: item,
-            child: Text(
-              item,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey[800],
-              ),
+          child: DropdownButtonFormField<String>(
+            value: items.contains(value) ? value : items.first,
+            items: items.map((item) {
+              return DropdownMenuItem(
+                value: item,
+                child: Text(
+                  item,
+                  style: const TextStyle(fontSize: 15, color: Colors.black87),
+                ),
+              );
+            }).toList(),
+            onChanged: onChanged,
+            decoration: const InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 16),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
             ),
-          );
-        }).toList(),
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: GoogleFonts.poppins(
-            fontSize: 14,
-            color: Colors.grey[500],
-          ),
-          prefixIcon: Icon(icon, color: AppTheme.primaryColor),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(
-              color: AppTheme.primaryColor,
-              width: 2,
+            dropdownColor: Colors.white,
+            icon: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.grey[600],
             ),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
           ),
         ),
-        dropdownColor: Colors.white,
-        icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[400]),
-      ),
+      ],
     );
   }
 }

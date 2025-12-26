@@ -46,6 +46,7 @@ dependencies:
   firebase_core: ^4.3.0
   firebase_messaging: ^16.0.0
   webview_flutter: ^4.10.0
+  upgrader: ^12.3.0
 
 dev_dependencies:
   flutter_test:
