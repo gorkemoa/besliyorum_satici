@@ -7,7 +7,6 @@ import '../../viewmodels/auth_viewmodel.dart';
 import '../auth/login_page.dart';
 import 'settings/account_settings_page.dart';
 import 'settings/privacy_settings_page.dart';
-import 'settings/help_support_page.dart';
 import 'settings/about_page.dart';
 import 'settings/documents_list_page.dart';
 import 'settings/addresses_page.dart';
@@ -125,19 +124,6 @@ class SettingsPage extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const DocumentsListPage(),
-                ),
-              );
-            },
-          ),
-          _buildSettingsTile(
-            context: context,
-            icon: Icons.help_outline,
-            title: 'Yardım ve Destek',
-            subtitle: 'SSS ve iletişim bilgileri',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const HelpSupportPage(),
                 ),
               );
             },
