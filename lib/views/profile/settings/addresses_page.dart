@@ -36,9 +36,71 @@ class _AddressesPageState extends State<AddressesPage> {
   }
 
   Future<void> _navigateToAddAddress() async {
-    await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (context) => const AddressFormPage()),
+    final viewModel = Provider.of<AddressViewModel>(context, listen: false);
+    
+    // Eğer missingAddressTypes varsa, seçim dialogu göster
+    if (viewModel.missingAddressTypes.isNotEmpty) {
+      await _showAddressTypeSelectionDialog(viewModel.missingAddressTypes);
+    } else {
+      await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (context) => const AddressFormPage()),
+      );
+    }
+  }
+
+  Future<void> _showAddressTypeSelectionDialog(List<String> missingTypes) async {
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eksik Adres Tipi'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Lütfen eklemek istediğiniz adres tipini seçin:',
+              style: TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+            const SizedBox(height: 16),
+            ...missingTypes.map((type) => InkWell(
+              onTap: () => Navigator.of(context).pop(type),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    _buildTypeBadge(type),
+                    const Spacer(),
+                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                  ],
+                ),
+              ),
+            )),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('İptal'),
+          ),
+        ],
+      ),
     );
+
+    if (selected != null && mounted) {
+      // TODO: Seçilen tip ile form sayfasını aç
+      await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (context) => AddressFormPage(
+            // requiredAddressTypeId parametresi ile tip
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _navigateToEditAddress(AddressModel address) async {
@@ -69,12 +131,19 @@ class _AddressesPageState extends State<AddressesPage> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppTheme.textPrimary, size: 26),
-            onPressed: _navigateToAddAddress,
-          ),
-        ],
+      ),
+      floatingActionButton: Consumer<AddressViewModel>(
+        builder: (context, viewModel, child) {
+          // Sadece adresler tam değilse butonu göster
+          if (!viewModel.isAddressComplete) {
+            return FloatingActionButton(
+              onPressed: _navigateToAddAddress,
+              backgroundColor: AppTheme.primaryColor,
+              child: const Icon(Icons.add, color: Colors.white),
+            );
+          }
+          return const SizedBox.shrink();
+        },
       ),
       body: Consumer<AddressViewModel>(
         builder: (context, viewModel, child) {
@@ -95,13 +164,59 @@ class _AddressesPageState extends State<AddressesPage> {
           return RefreshIndicator(
             onRefresh: _loadAddresses,
             color: AppTheme.primaryColor,
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: viewModel.addresses.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return _buildAddressCard(viewModel.addresses[index]);
-              },
+            child: Column(
+              children: [
+                // Eksik adres tipleri varsa banner göster
+                if (!viewModel.isAddressComplete && viewModel.missingAddressTypes.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      border: Border.all(color: Colors.orange[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Eksik Adres Tipleri',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.orange[900],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Eksik: ${viewModel.missingAddressTypes.join(', ')}',
+                                style: TextStyle(
+                                  color: Colors.orange[800],
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: viewModel.addresses.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      return _buildAddressCard(viewModel.addresses[index]);
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -138,30 +253,54 @@ class _AddressesPageState extends State<AddressesPage> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.location_off_outlined, size: 56, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text(
-              'Henüz adres eklemediniz',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
+    return Consumer<AddressViewModel>(
+      builder: (context, viewModel, child) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.location_off_outlined, size: 56, color: Colors.grey[300]),
+                const SizedBox(height: 16),
+                Text(
+                  'Henüz adres eklemediniz',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (!viewModel.isAddressComplete && viewModel.missingAddressTypes.isNotEmpty) ...[
+                  Text(
+                    'Eksik adres tipleri:',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: viewModel.missingAddressTypes.map((type) {
+                      return _buildTypeBadge(type);
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Yeni adres eklemek için + butonuna tıklayın',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                  ),
+                ] else
+                  Text(
+                    'Yeni adres eklemek için + butonuna tıklayın',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                  ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Yeni adres eklemek için + butonuna tıklayın',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

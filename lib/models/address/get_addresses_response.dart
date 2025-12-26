@@ -3,7 +3,7 @@ import 'address_model.dart';
 class GetAddressesResponse {
   final bool error;
   final bool success;
-  final List<AddressModel> data;
+  final AddressesData data;
   final String message;
 
   GetAddressesResponse({
@@ -17,10 +17,32 @@ class GetAddressesResponse {
     return GetAddressesResponse(
       error: json['error'] as bool,
       success: json['success'] as bool,
-      data: (json['data'] as List)
+      data: AddressesData.fromJson(json['data'] as Map<String, dynamic>),
+      message: json['200'] as String? ?? '',
+    );
+  }
+}
+
+class AddressesData {
+  final bool isAddressComplete;
+  final List<String> missingAddressTypes;
+  final List<AddressModel> addresses;
+
+  AddressesData({
+    required this.isAddressComplete,
+    required this.missingAddressTypes,
+    required this.addresses,
+  });
+
+  factory AddressesData.fromJson(Map<String, dynamic> json) {
+    return AddressesData(
+      isAddressComplete: json['isAddressComplete'] as bool,
+      missingAddressTypes: (json['missingAddressTypes'] as List)
+          .map((item) => item as String)
+          .toList(),
+      addresses: (json['addresses'] as List)
           .map((item) => AddressModel.fromJson(item as Map<String, dynamic>))
           .toList(),
-      message: json['200'] as String? ?? '',
     );
   }
 }

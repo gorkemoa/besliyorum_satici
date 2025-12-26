@@ -48,6 +48,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         );
   }
 
+  void _showFullScreenImage(String imageUrl) {
+    if (imageUrl.isEmpty) return;
+    
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.95),
+      builder: (context) => _FullScreenImageViewer(imageUrl: imageUrl),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,14 +147,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         background: Container(
           color: Colors.white,
           padding: const EdgeInsets.only(top: 60, bottom: 20),
-          child: Hero(
-            tag: 'product_${product.productID}',
-            child: product.productMainImage.isNotEmpty
-                ? Image.network(
-                    product.productMainImage,
-                    fit: BoxFit.contain,
-                  )
-                : const Icon(Icons.image, size: 100, color: Colors.grey),
+          child: GestureDetector(
+            onTap: () => _showFullScreenImage(product.productMainImage),
+            child: Hero(
+              tag: 'product_${product.productID}',
+              child: product.productMainImage.isNotEmpty
+                  ? Image.network(
+                      product.productMainImage,
+                      fit: BoxFit.contain,
+                    )
+                  : const Icon(Icons.image, size: 100, color: Colors.grey),
+            ),
           ),
         ),
       ),
@@ -513,7 +526,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
           ),
 
-          // En Sağ: Ok veya Düzenle ikonu
+          // En Sağ: Düzenle ikonu
           const SizedBox(width: 8),
           InkWell(
               onTap: isSelling
@@ -526,12 +539,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       // Ardından bottom sheet'i aç
                       _showVariantEditSheet(variation, viewModel);
                     },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0),
+            child: Container(
+              padding: const EdgeInsets.all(8),
               child: Icon(
-                isSelling ? Icons.check_circle : Icons.edit_outlined,
-                color: isSelling ? _successGreen : Colors.grey,
-                size: 20,
+                Icons.edit_outlined,
+                color: isSelling ? Colors.blue : Colors.grey,
+                size: 18,
               ),
             ),
           ),
@@ -1400,6 +1413,94 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               onPressed: _loadProductDetail,
               child: const Text("Tekrar Dene"),
             )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FullScreenImageViewer extends StatefulWidget {
+  final String imageUrl;
+
+  const _FullScreenImageViewer({required this.imageUrl});
+
+  @override
+  State<_FullScreenImageViewer> createState() => _FullScreenImageViewerState();
+}
+
+class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
+  double _dragOffset = 0;
+  double _scale = 1.0;
+
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      _dragOffset += details.delta.dy;
+      // Opacity ve scale için drag offset'i kullan
+      double progress = (_dragOffset.abs() / 200).clamp(0.0, 1.0);
+      _scale = 1.0 - (progress * 0.2);
+    });
+  }
+
+  void _onVerticalDragEnd(DragEndDetails details) {
+    if (_dragOffset.abs() > 100) {
+      // Eşik değerini geçtiyse kapat
+      Navigator.of(context).pop();
+    } else {
+      // Geri dön
+      setState(() {
+        _dragOffset = 0;
+        _scale = 1.0;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double opacity = 1.0 - (_dragOffset.abs() / 300).clamp(0.0, 1.0);
+    
+    return GestureDetector(
+      onVerticalDragUpdate: _onVerticalDragUpdate,
+      onVerticalDragEnd: _onVerticalDragEnd,
+      child: Container(
+        color: Colors.black.withOpacity(opacity * 0.95),
+        child: Stack(
+          children: [
+            Center(
+              child: Transform.translate(
+                offset: Offset(0, _dragOffset),
+                child: Transform.scale(
+                  scale: _scale,
+                  child: InteractiveViewer(
+                    minScale: 0.5,
+                    maxScale: 4.0,
+                    child: Image.network(
+                      widget.imageUrl,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10,
+              right: 10,
+              child: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

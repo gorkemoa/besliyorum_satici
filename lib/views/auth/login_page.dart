@@ -187,30 +187,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 30),
 
-                  // Forgot Password
-                  Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        AppDialog.show(
-                          context: context,
-                          title: 'Şifre Yenileme',
-                          content:
-                              'Şifre yenileme bağlantısı e-posta adresinize gönderilecektir.',
-                          type: AppDialogType.info,
-                          confirmText: 'Tamam',
-                        );
-                      },
-                      child: Text(
-                        'Şifrenizi mi unuttunuz?',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFFFF8A65), // Lighter orange
-                          decoration: TextDecoration.underline,
-                          decorationColor: const Color(0xFFFF8A65),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
 
                   // Register
                   Row(

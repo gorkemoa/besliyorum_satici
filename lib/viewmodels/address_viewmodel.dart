@@ -15,6 +15,8 @@ class AddressViewModel extends ChangeNotifier {
 
   // Address list state
   List<AddressModel> _addresses = [];
+  bool _isAddressComplete = false;
+  List<String> _missingAddressTypes = [];
   AddressLoadState _loadState = AddressLoadState.initial;
   String? _errorMessage;
 
@@ -39,6 +41,8 @@ class AddressViewModel extends ChangeNotifier {
 
   // Getters for address list
   List<AddressModel> get addresses => _addresses;
+  bool get isAddressComplete => _isAddressComplete;
+  List<String> get missingAddressTypes => _missingAddressTypes;
   AddressLoadState get loadState => _loadState;
   String? get errorMessage => _errorMessage;
 
@@ -76,7 +80,9 @@ class AddressViewModel extends ChangeNotifier {
       final response = await _addressService.getAddresses(userToken);
 
       if (response.success && !response.error) {
-        _addresses = response.data;
+        _addresses = response.data.addresses;
+        _isAddressComplete = response.data.isAddressComplete;
+        _missingAddressTypes = response.data.missingAddressTypes;
         _loadState = AddressLoadState.loaded;
       } else {
         _errorMessage = 'Adresler yüklenemedi';

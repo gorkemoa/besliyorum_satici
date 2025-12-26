@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:besliyorum_satici/models/payment/payment_model.dart';
+import 'package:besliyorum_satici/models/payment/payment_detail_model.dart';
 import '../services/payment_service.dart';
 
 class PaymentViewModel extends ChangeNotifier {
@@ -13,6 +14,15 @@ class PaymentViewModel extends ChangeNotifier {
 
   PaymentListData? _paymentData;
   PaymentListData? get paymentData => _paymentData;
+
+  PaymentDetail? _paymentDetail;
+  PaymentDetail? get paymentDetail => _paymentDetail;
+
+  bool _isLoadingDetail = false;
+  bool get isLoadingDetail => _isLoadingDetail;
+
+  String? _detailErrorMessage;
+  String? get detailErrorMessage => _detailErrorMessage;
 
   // Geçmiş ödemeler
   List<Payment> get pastPayments => _paymentData?.pastPayments.payments ?? [];
@@ -29,6 +39,16 @@ class PaymentViewModel extends ChangeNotifier {
     _isLoading = false;
     _errorMessage = null;
     _paymentData = null;
+    _paymentDetail = null;
+    _isLoadingDetail = false;
+    _detailErrorMessage = null;
+  }
+
+  /// Ödeme detayını sıfırlar
+  void resetDetailState() {
+    _paymentDetail = null;
+    _isLoadingDetail = false;
+    _detailErrorMessage = null;
   }
 
   /// Kullanıcının ödemelerini yükler
@@ -53,6 +73,35 @@ class PaymentViewModel extends ChangeNotifier {
       }
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Ödeme detayını yükler
+  Future<void> getPaymentDetail(String userToken, int payID) async {
+    _isLoadingDetail = true;
+    _detailErrorMessage = null;
+    _paymentDetail = null;
+    notifyListeners();
+
+    try {
+      final response = await _paymentService.getPaymentDetail(userToken, payID);
+
+      if (response.success && response.data != null) {
+        _paymentDetail = response.data;
+      } else {
+        _detailErrorMessage = 'Ödeme detayı yüklenemedi';
+      }
+    } catch (e) {
+      if (e.toString().contains('403')) {
+        _detailErrorMessage = '403_LOGOUT';
+      } else if (e.toString().contains('417')) {
+        _detailErrorMessage = e.toString();
+      } else {
+        _detailErrorMessage = 'Bir hata oluştu';
+      }
+    } finally {
+      _isLoadingDetail = false;
       notifyListeners();
     }
   }
